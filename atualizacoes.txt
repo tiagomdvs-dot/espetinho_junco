@@ -266,3 +266,11 @@
   - Resumo simplificado: Total Despesas + Total Lançamentos
   - 6 testes financeiro (criar despesa, criar segunda, listar, excluir)
 
+24/06/2026
+- Adicionado gunicorn ao requirements.txt para deploy no Render
+- Configuração necessária no Render:
+  - Build Command: `pip install -r requirements.txt`
+  - Start Command: `gunicorn app:app`
+  - Variável de ambiente: `DATABASE_URL` (PostgreSQL do Render)
+  - Variável de ambiente: `SECRET_KEY` (opcional, já tem fallback)
+
