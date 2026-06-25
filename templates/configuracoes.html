@@ -21,11 +21,13 @@
                 <div class="mesas-list">
                     {% for mesa in mesas %}
                     <div class="mesa-item">
-                        <span><i class="fas fa-chair"></i> Mesa {{ mesa.numero }}</span>
+                        <span><i class="fas {% if mesa.numero == 0 %}fa-store{% else %}fa-chair{% endif %}"></i> {% if mesa.numero == 0 %}Balcão{% else %}Mesa {{ mesa.numero }}{% endif %}</span>
+                        {% if mesa.numero != 0 %}
                         <a href="{{ url_for('config.excluir_mesa', id=mesa.id) }}" class="btn-icon btn-danger"
                            onclick="return confirm('Remover mesa?')">
                             <i class="fas fa-trash"></i>
                         </a>
+                        {% endif %}
                     </div>
                     {% else %}
                     <p class="empty-state">Nenhuma mesa cadastrada</p>

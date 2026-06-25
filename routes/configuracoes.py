@@ -83,6 +83,9 @@ def excluir_mesa(id):
     if not mesa:
         flash('Mesa não encontrada', 'error')
         return redirect(url_for('config.index'))
+    if mesa.numero == 0:
+        flash('O Balcão não pode ser removido.', 'error')
+        return redirect(url_for('config.index'))
     db.session.delete(mesa)
     db.session.commit()
     flash('Mesa removida!', 'success')
