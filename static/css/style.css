@@ -541,6 +541,8 @@ img { max-width: 100%; display: block; }
   min-height: 36px; white-space: nowrap; font-family: inherit;
 }
 .filter-btn:hover { border-color: var(--orange); color: var(--orange); }
+.filter-cat { border-style: dashed; border-color: var(--gray-300); }
+.filter-cat:hover { border-style: solid; border-color: var(--orange); }
 .filter-btn.active {
   background: var(--orange); color: #fff;
   border-color: var(--orange);

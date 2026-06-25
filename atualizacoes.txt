@@ -293,3 +293,16 @@
   - templates/comanda.html: exibe valores parciais e restante
   - CSS: .order-mini-footer ajustado para flex-wrap com novos botões
 
+25/06/2026
+- 38eed94 - Trocado driver PostgreSQL de psycopg2-binary para pg8000 (puro Python, compatível Vercel Lambda)
+- 38eed94 - app.py detecta pg8000 e adiciona +pg8000 ao dialeto da URL automaticamente
+- 1dc38f6 - Removido connect_args (connect_timeout) dos engine options (incompatível pg8000)
+- 1dc38f6 - Removido sslmode e pgbouncer da query string da URL (parâmetros libpq, pg8000 ignora)
+- 883e4cd - Corrigido trailing ? na URL quando query params são removidos
+- 50cb128 - app.py agora também verifica POSTGRES_URL_NON_POOLING (variável da integração Supabase Vercel)
+- Cardápio admin: categorias agora aparecem como botões de filtro clicáveis ao lado dos filtros de tipo
+  - templates/cardapio.html: botões dinâmicos gerados para cada categoria, data-filter-type="categoria"
+  - templates/cardapio.html: cada produto-card ganhou data-categoria-id
+  - templates/cardapio.html: JS de filtro estendido para suportar filterType (tipo, categoria, all)
+  - CSS: .filter-cat com border-style:dashed para distinguir visualmente filtros de categoria
+

@@ -13,15 +13,18 @@
 </div>
 
 <div class="filter-tabs">
-    <button class="filter-btn active" data-filter="all">Todos</button>
-    <button class="filter-btn" data-filter="espetinho">Espetinhos</button>
-    <button class="filter-btn" data-filter="bebida">Bebidas</button>
-    <button class="filter-btn" data-filter="acompanhamento">Acompanhamentos</button>
+    <button class="filter-btn active" data-filter="all" data-filter-type="all">Todos</button>
+    <button class="filter-btn" data-filter="espetinho" data-filter-type="tipo">Espetinhos</button>
+    <button class="filter-btn" data-filter="bebida" data-filter-type="tipo">Bebidas</button>
+    <button class="filter-btn" data-filter="acompanhamento" data-filter-type="tipo">Acompanhamentos</button>
+    {% for cat in categorias %}
+    <button class="filter-btn filter-cat" data-filter="{{ cat.id }}" data-filter-type="categoria">{{ cat.nome }}</button>
+    {% endfor %}
 </div>
 
 <div class="produtos-grid">
     {% for produto in produtos %}
-    <div class="produto-card" data-tipo="{{ produto.tipo }}">
+    <div class="produto-card" data-tipo="{{ produto.tipo }}" data-categoria-id="{{ produto.categoria_id or '' }}">
         <div class="produto-info">
             <span class="produto-nome">{{ produto.nome }}</span>
             <span class="produto-preco">R$ {{ produto.preco|brl }}</span>
@@ -171,13 +174,23 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
         const filter = this.dataset.filter;
+        const filterType = this.dataset.filterType;
         document.querySelectorAll('.produto-card').forEach(card => {
-            if (filter === 'all' || card.dataset.tipo === filter) {
-                card.style.display = 'flex';
-            } else {
-                card.style.display = 'none';
+            let show = false;
+            if (filterType === 'all') {
+                show = true;
+            } else if (filterType === 'tipo') {
+                show = card.dataset.tipo === filter;
+            } else if (filterType === 'categoria') {
+                show = card.dataset.categoriaId === filter;
             }
+            card.style.display = show ? 'flex' : 'none';
         });
+        const empty = document.querySelector('.empty-state');
+        if (empty) {
+            const visible = [...document.querySelectorAll('.produto-card')].some(c => c.style.display !== 'none');
+            empty.style.display = visible ? 'none' : 'flex';
+        }
     });
 });
 </script>
