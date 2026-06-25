@@ -63,8 +63,8 @@ Este projeto é usado principalmente em tablets e celulares, não em notebooks o
 Sempre garantir que o ambiente Git esteja configurado antes de commitar:
 
 ```bash
-git config user.email "thyagorosan@hotmail.com"
-git config user.name "thyago"
+git config user.email "tiago.m.dvs@gmail.com"
+git config user.name "tiagomdvs-dot"
 ```
 
 ## Commits
