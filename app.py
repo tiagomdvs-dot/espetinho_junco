@@ -17,6 +17,12 @@ if os.environ.get('VERCEL'):
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'espetinho-junco-secret-key-2024')
 
 database_url = os.environ.get('DATABASE_URL')
+if database_url and database_url.startswith('postgresql://'):
+    try:
+        import pg8000
+        database_url = database_url.replace('postgresql://', 'postgresql+pg8000://', 1)
+    except ImportError:
+        pass
 if not database_url:
     if os.environ.get('VERCEL'):
         tmp_dir = tempfile.gettempdir()
