@@ -125,13 +125,15 @@ def criar():
         return redirect(url_for('pedidos.listar'))
 
     if tipo == 'mesa' and mesa_id:
-        mesa_ocupada = Pedido.query.filter(
-            Pedido.mesa_id == int(mesa_id),
-            Pedido.status.in_(['em_preparo', 'pronto', 'saiu_para_entrega', 'entregue'])
-        ).first()
-        if mesa_ocupada:
-            flash('Esta mesa já está ocupada.', 'error')
-            return _redirect_back()
+        mesa_obj = Mesa.query.get(int(mesa_id))
+        if mesa_obj and mesa_obj.numero != 0:
+            mesa_ocupada = Pedido.query.filter(
+                Pedido.mesa_id == int(mesa_id),
+                Pedido.status.in_(['em_preparo', 'pronto', 'saiu_para_entrega', 'entregue'])
+            ).first()
+            if mesa_ocupada:
+                flash('Esta mesa já está ocupada.', 'error')
+                return _redirect_back()
 
     pedido = Pedido(
         mesa_id=int(mesa_id) if mesa_id else None,
@@ -383,13 +385,15 @@ def criar_completo():
         return _redirect_back()
 
     if tipo == 'mesa' and mesa_id:
-        mesa_ocupada = Pedido.query.filter(
-            Pedido.mesa_id == int(mesa_id),
-            Pedido.status.in_(['em_preparo', 'pronto', 'saiu_para_entrega', 'entregue'])
-        ).first()
-        if mesa_ocupada:
-            flash('Esta mesa já está ocupada.', 'error')
-            return _redirect_back()
+        mesa_obj = Mesa.query.get(int(mesa_id))
+        if mesa_obj and mesa_obj.numero != 0:
+            mesa_ocupada = Pedido.query.filter(
+                Pedido.mesa_id == int(mesa_id),
+                Pedido.status.in_(['em_preparo', 'pronto', 'saiu_para_entrega', 'entregue'])
+            ).first()
+            if mesa_ocupada:
+                flash('Esta mesa já está ocupada.', 'error')
+                return _redirect_back()
 
     pedido = Pedido(
         mesa_id=int(mesa_id) if mesa_id else None,
