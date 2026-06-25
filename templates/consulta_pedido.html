@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{% if pedido %}Pedido #{{ pedido.id }} — Espetinho Junco{% else %}Verificar Pedido — Espetinho Junco{% endif %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --orange: #FF7A30; --orange-dark: #E33E00;
+            --success: #10B981; --danger: #EF4444; --info: #3B82F6;
+            --bg: #0A0807; --bg-panel: #151210; --bg-input: #1F1A17;
+            --text: #FAF7F5; --text-sub: #A39E9A; --text-muted: #78716C;
+            --border: rgba(255,255,255,0.06);
+            --radius: 16px; --radius-sm: 10px;
+            --shadow: 0 8px 24px rgba(0,0,0,0.6);
+            --transition: 0.24s cubic-bezier(.4,0,.2,1);
+        }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; display: flex; flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 480px; margin: 0 auto; padding: 1.5rem 1rem; width: 100%; flex: 1; }
+
+        .header {
+            display: flex; align-items: center; gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .header a {
+            width: 40px; height: 40px; border-radius: 12px;
+            background: var(--bg-input); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-sub); text-decoration: none;
+            font-size: 1.1rem; transition: var(--transition);
+            flex-shrink: 0;
+        }
+        .header a:hover { background: var(--orange); color: #fff; border-color: var(--orange); }
+        .header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.3px; }
+
+        .logo-area {
+            text-align: center; margin-bottom: 2rem; padding: 0.5rem 0;
+        }
+        .logo-area img {
+            width: 96px; height: 96px; border-radius: 24px;
+            margin-bottom: 0.75rem; box-shadow: 0 4px 20px rgba(255,122,48,0.15);
+        }
+        .logo-area h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); }
+        .logo-area p { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+        /* ── Search Form ── */
+        .search-card {
+            background: var(--bg-panel); border-radius: var(--radius);
+            padding: 1.5rem; border: 1px solid var(--border);
+            text-align: center;
+        }
+        .search-card h3 { font-size: 1rem; margin-bottom: 0.25rem; }
+        .search-card p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; }
+
+        .input-group {
+            display: flex; gap: 0.5rem;
+        }
+        .input-group input {
+            flex: 1; padding: 0.75rem 1rem;
+            background: var(--bg-input); border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm); color: var(--text);
+            font-size: 1rem; font-weight: 600; font-family: inherit;
+            outline: none; transition: var(--transition);
+            text-align: center; letter-spacing: 1px;
+        }
+        .input-group input:focus { border-color: var(--orange); }
+        .input-group button {
+            padding: 0.75rem 1.25rem; border: none;
+            background: var(--orange); color: #fff;
+            border-radius: var(--radius-sm); font-weight: 700;
+            font-size: 0.85rem; cursor: pointer;
+            transition: var(--transition); white-space: nowrap;
+        }
+        .input-group button:hover { background: var(--orange-dark); transform: scale(1.02); }
+        .input-group button:active { transform: scale(0.97); }
+
+        /* ── Order Status Card ── */
+        .order-card {
+            background: var(--bg-panel); border-radius: var(--radius);
+            border: 1px solid var(--border); overflow: hidden;
+        }
+        .order-header {
+            padding: 1.25rem 1.25rem 1rem;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 1px solid var(--border);
+        }
+        .order-number { font-weight: 800; font-size: 1.1rem; color: var(--orange); }
+        .order-number small { font-weight: 400; font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.1rem; }
+        .order-date { font-size: 0.78rem; color: var(--text-muted); }
+        .order-date i { margin-right: 0.3rem; }
+
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            padding: 0.35rem 0.75rem; border-radius: 20px;
+            font-size: 0.78rem; font-weight: 700; letter-spacing: 0.2px;
+        }
+        .status-em_preparo { background: rgba(255,122,48,0.15); color: var(--orange); border: 1px solid rgba(255,122,48,0.3); }
+        .status-pronto { background: rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+        .status-entregue { background: rgba(59,130,246,0.15); color: var(--info); border: 1px solid rgba(59,130,246,0.3); }
+        .status-pago { background: rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+        .status-cancelado { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+
+        .order-body { padding: 1rem 1.25rem; }
+
+        .cliente-info {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.6rem 0; margin-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.88rem; color: var(--text-sub);
+        }
+        .cliente-info i { width: 18px; color: var(--orange); }
+
+        .items-title {
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1px; color: var(--text-muted); margin-bottom: 0.5rem;
+        }
+
+        .item-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.55rem 0; border-bottom: 1px solid var(--border);
+            font-size: 0.88rem;
+        }
+        .item-row:last-child { border-bottom: none; }
+        .item-qtd { color: var(--orange); font-weight: 700; margin-right: 0.4rem; }
+        .item-name { color: var(--text); flex: 1; }
+        .item-preco { color: var(--text-sub); font-weight: 600; white-space: nowrap; }
+
+        .order-total {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.75rem 0 0; margin-top: 0.5rem;
+            border-top: 2px solid var(--orange);
+            font-weight: 800; font-size: 1.1rem;
+        }
+        .order-total span:last-child { color: var(--orange); }
+
+        .order-obs {
+            margin-top: 0.75rem; padding: 0.75rem;
+            background: var(--bg-input); border-radius: var(--radius-sm);
+            font-size: 0.8rem; color: var(--text-sub); line-height: 1.6;
+            white-space: pre-line;
+        }
+        .order-obs strong { color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.3rem; }
+
+        .steps {
+            display: flex; justify-content: center; gap: 0.25rem;
+            padding: 1rem 1.25rem; border-top: 1px solid var(--border);
+        }
+        .step {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 0.2rem; flex: 1; position: relative;
+        }
+        .step-circle {
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; border: 2px solid var(--border);
+            color: var(--text-muted); background: var(--bg-input);
+            transition: var(--transition);
+        }
+        .step.done .step-circle {
+            background: var(--success); border-color: var(--success);
+            color: #fff;
+        }
+        .step.active .step-circle {
+            background: var(--orange); border-color: var(--orange);
+            color: #fff; box-shadow: 0 0 12px var(--orange-glow);
+        }
+        .step-label { font-size: 0.6rem; color: var(--text-muted); font-weight: 600; text-align: center; white-space: nowrap; }
+        .step.done .step-label { color: var(--success); }
+        .step.active .step-label { color: var(--orange); font-weight: 700; }
+        .step-line {
+            position: absolute; top: 16px; right: 50%;
+            width: 100%; height: 2px;
+            background: var(--border); z-index: 0;
+        }
+        .step:first-child .step-line { display: none; }
+        .step.done + .step .step-line { background: var(--success); }
+        .step.active + .step .step-line { background: var(--orange); }
+
+        .btn-back {
+            display: block; text-align: center; margin-top: 1rem;
+            padding: 0.8rem; border-radius: var(--radius-sm);
+            background: var(--bg-input); border: 1px solid var(--border);
+            color: var(--text-sub); text-decoration: none;
+            font-weight: 600; font-size: 0.85rem; transition: var(--transition);
+        }
+        .btn-back:hover { background: var(--orange); color: #fff; border-color: var(--orange); }
+
+        .flash-area { margin-bottom: 1rem; }
+        .flash-msg {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.7rem 1rem; border-radius: var(--radius-sm);
+            font-size: 0.85rem; font-weight: 600;
+        }
+        .flash-success { background: rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+        .flash-error { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+
+        .footer-text { text-align: center; margin-top: 1.5rem; font-size: 0.75rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="{{ url_for('cardapio.cardapio_online') }}" title="Voltar ao Cardápio">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1>{% if pedido %}Pedido #{{ pedido.id }}{% else %}Verificar Pedido{% endif %}</h1>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-area">
+            {% for category, message in messages %}
+            <div class="flash-msg flash-{{ category }}">
+                <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% if not pedido %}
+        <!-- Form to search order -->
+        <div class="logo-area">
+            <img src="{{ url_for('static', filename='junco_espetinho.png') }}" alt="Espetinho Junco">
+            <h2>Espetinho Junco</h2>
+            <p>Acompanhe seu pedido</p>
+        </div>
+        <div class="search-card">
+            <h3>Digite o número do pedido</h3>
+            <p>O número está na sua comanda ou na mensagem de confirmação.</p>
+            <form method="POST" action="{{ url_for('cardapio.consultar_pedido') }}">
+                <div class="input-group">
+                    <input type="text" name="pedido_id" inputmode="numeric" pattern="[0-9]+"
+                           placeholder="Ex: 42" autofocus required>
+                    <button type="submit"><i class="fas fa-search"></i> Buscar</button>
+                </div>
+            </form>
+        </div>
+
+        {% else %}
+        <!-- Order Status -->
+        {% set status_map = {
+            'em_preparo': 'Em Preparo',
+            'pronto': 'Pronto',
+            'saiu_para_entrega': 'Saiu para Entrega',
+            'entregue': 'Entregue',
+            'pago': 'Pago',
+            'cancelado': 'Cancelado'
+        } %}
+        {% set status_icon = {
+            'em_preparo': 'fa-fire',
+            'pronto': 'fa-check',
+            'saiu_para_entrega': 'fa-truck',
+            'entregue': 'fa-hand-peace',
+            'pago': 'fa-circle-check',
+            'cancelado': 'fa-ban'
+        } %}
+        {% set steps = ['em_preparo', 'pronto', 'saiu_para_entrega', 'entregue', 'pago'] %}
+
+        <div class="order-card">
+            <div class="order-header">
+                <div>
+                    <div class="order-number">
+                        Pedido #{{ pedido.id }}
+                        <small>
+                            {% if pedido.tipo == 'delivery' %}<i class="fas fa-truck"></i> Delivery{% else %}<i class="fas fa-store"></i> Mesa{% endif %}
+                        </small>
+                    </div>
+                </div>
+                <div class="status-badge status-{{ pedido.status }}">
+                    <i class="fas {{ status_icon.get(pedido.status, 'fa-circle') }}"></i>
+                    {{ status_map.get(pedido.status, pedido.status) }}
+                </div>
+            </div>
+
+            {% if pedido.status != 'cancelado' %}
+            <div class="steps">
+                {% for s in steps %}
+                {% set step_idx = loop.index0 %}
+                {% set current_idx = steps.index(pedido.status) if pedido.status in steps else -1 %}
+                <div class="step {% if step_idx < current_idx %}done{% elif step_idx == current_idx %}active{% endif %}">
+                    <div class="step-circle">
+                        {% if step_idx < current_idx %}<i class="fas fa-check"></i>
+                        {% elif step_idx == current_idx %}<i class="fas {{ status_icon.get(s, 'fa-circle') }}"></i>
+                        {% else %}{{ step_idx + 1 }}{% endif %}
+                    </div>
+                    <div class="step-label">{{ status_map[s] }}</div>
+                    <div class="step-line"></div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="order-body">
+                {% if pedido.cliente_nome %}
+                <div class="cliente-info">
+                    <i class="fas fa-user"></i>
+                    <span>{{ pedido.cliente_nome }}</span>
+                </div>
+                {% endif %}
+
+                <div style="display: flex; gap: 1rem; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                    <span><i class="far fa-clock"></i> {{ pedido.criado_em.strftime('%d/%m/%Y às %H:%M') }}</span>
+                </div>
+
+                <div class="items-title"><i class="fas fa-receipt"></i> Itens</div>
+
+                {% for item in pedido.itens %}
+                <div class="item-row">
+                    <span>
+                        <span class="item-qtd">{{ item.quantidade }}x</span>
+                        <span class="item-name">{{ item.produto.nome if item.produto else 'Item #' + item.produto_id|string }}</span>
+                    </span>
+                    <span class="item-preco">R$ {{ item.preco_unitario * item.quantidade|brl }}</span>
+                </div>
+                {% endfor %}
+
+                <div class="order-total">
+                    <span>Total</span>
+                    <span>R$ {{ pedido.total or 0|brl }}</span>
+                </div>
+
+                {% if pedido.observacao %}
+                <div class="order-obs">
+                    <strong><i class="fas fa-info-circle"></i> Informações</strong>
+                    {{ pedido.observacao }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <a href="{{ url_for('cardapio.cardapio_online') }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Voltar ao Cardápio
+        </a>
+        {% endif %}
+
+        <div class="footer-text">
+            Espetinho Junco — {% if pedido %}Status atualizado em tempo real{% else %}Digite o número do pedido para acompanhar{% endif %}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block page_title %}Delivery{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-header-actions">
+        <button class="btn btn-sm btn-secondary" onclick="window.location.reload()">
+            <i class="fas fa-sync-alt"></i> Atualizar
+        </button>
+    </div>
+</div>
+
+<div class="pedidos-grid">
+    {% for pedido in pedidos %}
+    <div class="pedido-card status-{{ pedido.status }}">
+        <div class="pedido-header">
+            <span class="pedido-id">Pedido #{{ pedido.id }}</span>
+            <span class="pedido-status status-{{ pedido.status }}">
+                    {% if pedido.status == 'em_preparo' %}<i class="fas fa-cog fa-spin"></i>
+                    {% elif pedido.status == 'pronto' %}<i class="fas fa-check-circle"></i>
+                    {% elif pedido.status == 'saiu_para_entrega' %}<i class="fas fa-truck"></i>
+                    {% elif pedido.status == 'entregue' %}<i class="fas fa-hand-peace"></i>
+                    {% elif pedido.status == 'pago' %}<i class="fas fa-check-double"></i>{% endif %}
+                    {{ pedido.status|replace('_', ' ')|capitalize }}
+            </span>
+        </div>
+        <div class="pedido-body">
+            <div class="pedido-cliente">
+                <i class="fas fa-user"></i> {{ pedido.cliente_nome or 'Anônimo' }}
+            </div>
+            <div class="pedido-info-row">
+                <span><i class="fas fa-clock"></i> {{ pedido.criado_em.strftime('%H:%M - %d/%m') if pedido.criado_em else '' }}</span>
+                <span><i class="fas fa-box"></i> {{ pedido.itens|length }} itens</span>
+                {% if pedido.forma_pagamento %}
+                {% if pedido.forma_pagamento == 'multi' and pedido.pagamentos_parciais %}
+                <span style="display:flex;flex-wrap:wrap;gap:0.25rem">
+                    {% for pp in pedido.pagamentos_parciais %}
+                    <span style="display:inline-flex;align-items:center;gap:0.2rem;font-size:0.78rem;background:var(--gray-100);padding:0.1rem 0.4rem;border-radius:6px">
+                        {% if pp.forma_pagamento in ('dinheiro', 'especie') %}<i class="fas fa-money-bill"></i>
+                        {% elif pp.forma_pagamento == 'pix' %}<i class="fas fa-qrcode"></i>
+                        {% elif pp.forma_pagamento in ('cartao', 'cartão') %}<i class="fas fa-credit-card"></i>
+                        {% endif %}
+                        {{ pp.forma_pagamento|fmt_pagamento }} R${{ pp.valor|brl }}
+                    </span>
+                    {% endfor %}
+                </span>
+                {% else %}
+                <span>
+                    {% if pedido.forma_pagamento in ('dinheiro', 'especie') %}<i class="fas fa-money-bill"></i>
+                    {% elif pedido.forma_pagamento == 'pix' %}<i class="fas fa-qrcode"></i>
+                    {% elif pedido.forma_pagamento in ('cartao', 'cartão') %}<i class="fas fa-credit-card"></i>
+                    {% else %}<i class="fas fa-receipt"></i>{% endif %}
+                    {{ pedido.forma_pagamento|fmt_pagamento }}
+                </span>
+                {% endif %}
+                {% endif %}
+            </div>
+            {% if pedido.observacao %}
+            <div class="pedido-obs" style="white-space:pre-line">
+                {{ pedido.observacao }}
+            </div>
+            {% endif %}
+            <div class="pedido-itens">
+                {% for item in pedido.itens %}
+                <div class="pedido-item">
+                    <span class="item-qtd">{{ item.quantidade }}x</span>
+                    <span class="item-nome">{{ item.produto.nome if item.produto else 'Item' }}</span>
+                    <span class="item-preco">R$ {{ item.preco_unitario|brl }}</span>
+                    {% if item.observacao %}
+                    <span class="item-obs">{{ item.observacao }}</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="pedido-total">
+                <span>Total:</span>
+                <strong>R$ {{ pedido.total or 0|brl }}</strong>
+            </div>
+        </div>
+        <div class="pedido-actions">
+            {% if pedido.status == 'em_preparo' %}
+            <a href="{{ url_for('delivery.mudar_status', id=pedido.id, status='pronto') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-check"></i> Pronto
+            </a>
+            {% endif %}
+            {% if pedido.status == 'pronto' %}
+            <a href="{{ url_for('delivery.mudar_status', id=pedido.id, status='saiu_para_entrega') }}" class="btn btn-sm btn-warning">
+                <i class="fas fa-truck"></i> Saiu p/ Entrega
+            </a>
+            {% endif %}
+            {% if pedido.status == 'saiu_para_entrega' %}
+            <a href="{{ url_for('delivery.mudar_status', id=pedido.id, status='entregue') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-hand-peace"></i> Confirmar Entrega
+            </a>
+            {% endif %}
+            {% if pedido.status == 'entregue' %}
+            <a href="{{ url_for('delivery.mudar_status', id=pedido.id, status='pago') }}" class="btn btn-sm btn-success">
+                <i class="fas fa-check-double"></i> Confirmar Pagamento
+            </a>
+            {% endif %}
+            {% if pedido.status in ('em_preparo', 'pronto', 'saiu_para_entrega', 'entregue') %}
+            <a href="{{ url_for('delivery.mudar_status', id=pedido.id, status='cancelado') }}" class="btn btn-sm btn-danger">
+                <i class="fas fa-ban"></i> Cancelar
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state full-width">
+        <i class="fas fa-truck"></i>
+        <p>Nenhum pedido de delivery</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+setInterval(function() { location.reload(); }, 20000);
+</script>
+{% endblock %}

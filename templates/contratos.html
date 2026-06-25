@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block page_title %}Contratos{% endblock %}
+{% block content %}
+<div class="contratos-container">
+    <div class="page-header">
+        <h2><i class="fas fa-file-signature"></i> Contratos Mensais</h2>
+        <button class="btn btn-primary" onclick="toggleForm()" id="btnNovo">
+            <i class="fas fa-plus"></i> Novo Contrato
+        </button>
+    </div>
+
+    <form method="POST" action="{{ url_for('contratos.salvar') }}" class="contrato-form" id="contratoForm" style="display:none">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Nome</label>
+                <input type="text" name="nome" required placeholder="Nome da pessoa/empresa">
+            </div>
+            <div class="form-group">
+                <label>Valor Mensal (R$)</label>
+                <input type="text" name="valor_mensal" required placeholder="0,00" inputmode="decimal" value="0,00">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Dia Vencimento</label>
+                <input type="number" name="dia_vencimento" min="1" max="31" value="5">
+            </div>
+            <div class="form-group">
+                <label>Observação <small class="text-muted">(opcional)</small></label>
+                <input type="text" name="observacao" placeholder="Ex: Empresa XYZ Ltda">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success btn-block"><i class="fas fa-check"></i> Salvar</button>
+    </form>
+
+    <div class="contratos-grid">
+        {% for item in contratos %}
+        {% set c = item.contrato %}
+        <div class="contrato-card {{ 'inativo' if not c.ativo }}">
+            <div class="contrato-header">
+                <strong class="contrato-nome">{{ c.nome }}</strong>
+                <span class="contrato-status {{ 'pago' if item.pago_mes else 'pendente' }}">
+                    {{ 'Pago' if item.pago_mes else 'Pendente' }}
+                </span>
+            </div>
+            <div class="contrato-body">
+                <div class="contrato-info">
+                    <span class="info-label">Valor</span>
+                    <strong>R$ {{ c.valor_mensal|brl }}</strong>
+                </div>
+                <div class="contrato-info">
+                    <span class="info-label">Vencimento</span>
+                    <span>Dia {{ c.dia_vencimento }}</span>
+                </div>
+                <div class="contrato-info">
+                    <span class="info-label">{{ mes }}/{{ ano }}</span>
+                    {% if item.pago_mes %}
+                    <span class="text-success">Pago em {{ item.pagamento.pago_em.strftime('%d/%m') }}</span>
+                    {% else %}
+                    <span class="text-danger">A vencer</span>
+                    {% endif %}
+                </div>
+                {% if c.observacao %}
+                <div class="contrato-obs">{{ c.observacao }}</div>
+                {% endif %}
+            </div>
+            <div class="contrato-actions">
+                {% if not item.pago_mes %}
+                <form method="POST" action="{{ url_for('contratos.pagar', id=c.id) }}" class="inline-form">
+                    <input type="hidden" name="valor" value="{{ '%.2f'|format(c.valor_mensal) }}">
+                    <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-check"></i> Pagar</button>
+                </form>
+                {% else %}
+                <form method="POST" action="{{ url_for('contratos.estornar', id=item.pagamento.id) }}" class="inline-form" onsubmit="return confirm('Estornar pagamento?')">
+                    <button type="submit" class="btn btn-sm btn-secondary"><i class="fas fa-undo"></i> Estornar</button>
+                </form>
+                {% endif %}
+                <button class="btn btn-sm btn-secondary" onclick="editarContrato({{ c.id }}, '{{ c.nome }}', {{ c.valor_mensal }}, {{ c.dia_vencimento }}, '{{ c.observacao or '' }}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <form method="POST" action="{{ url_for('contratos.excluir', id=c.id) }}" class="inline-form" onsubmit="return confirm('Excluir contrato de {{ c.nome }}?')">
+                    <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state" style="grid-column:1/-1">
+            <i class="fas fa-file-signature"></i>
+            <p>Nenhum contrato cadastrado</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<form method="POST" id="editarForm" style="display:none">
+    <input type="hidden" name="nome" id="editNome">
+    <input type="hidden" name="valor_mensal" id="editValor">
+    <input type="hidden" name="dia_vencimento" id="editDia">
+    <input type="hidden" name="observacao" id="editObs">
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleForm() {
+    var f = document.getElementById('contratoForm');
+    var btn = document.getElementById('btnNovo');
+    if (f.style.display === 'none') {
+        f.style.display = 'block';
+        btn.className = 'btn btn-secondary';
+        btn.innerHTML = '<i class="fas fa-times"></i> Cancelar';
+    } else {
+        f.style.display = 'none';
+        btn.className = 'btn btn-primary';
+        btn.innerHTML = '<i class="fas fa-plus"></i> Novo Contrato';
+    }
+}
+
+function editarContrato(id, nome, valor, dia, obs) {
+    var f = document.getElementById('editarForm');
+    f.action = '/contratos/editar/' + id;
+    document.getElementById('editNome').value = nome;
+    document.getElementById('editValor').value = valor.toFixed(2).replace('.', ',');
+    document.getElementById('editDia').value = dia;
+    document.getElementById('editObs').value = obs;
+    f.submit();
+}
+</script>
+{% endblock %}

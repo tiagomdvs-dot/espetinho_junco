@@ -1,0 +1,268 @@
+03/06/2026
+- Initial project setup
+- Estrutura base do projeto (Flask + SQLAlchemy)
+- Sistema de autenticação (login)
+- Rotas: dashboard, cardápio, pedidos, caixa, estoque, relatórios, configurações
+- Templates: base, login, dashboard, cardápio, comanda, pedidos, pedidos_cozinha, pedidos_garcom, caixa, estoque, relatórios, configurações
+- CSS e JS estáticos
+- Models: Usuário, Produto, Pedido, ItemPedido, Comanda, MovimentoCaixa
+- Git ignore configurado
+
+03/06/2026
+- Adicionado vercel.json para deploy no Vercel
+- Correção: app.py com instância Flask no nível superior
+- Correção: suporte a PostgreSQL via DATABASE_URL (Vercel)
+- Adicionado psycopg2-binary nas dependências
+- Criado atualizacoes.txt
+
+03/06/2026
+- Correção: SQLite usa /tmp/espetinho.db no Vercel (evita erro de filesystem readonly)
+- db.create_all() com try/except para não travar o app em caso de erro
+
+03/06/2026
+- Correção: app.py usa app = Flask(__name__) direto (necessário para detecção AST do Vercel)
+- App reestruturado com try/except global + traceback logging
+
+03/06/2026
+- Correção: restore Flask-Login no requirements.txt (estava faltando, causava ImportError)
+
+03/06/2026
+- Correção: instance_path configurado para /tmp/instance no Vercel (evita erro de filesystem readonly ao iniciar Flask-SQLAlchemy)
+
+03/06/2026
+- Correção: criação automática de usuário admin (admin/admin) na primeira execução
+- db.create_all() agora levanta exceção em vez de engolir erro silenciosamente
+
+03/06/2026
+- Correção: SQLite com try/except no db.create_all() (graceful handling)
+- Usa tempfile.gettempdir() em vez de /tmp fixo (mais portável)
+- database_available flag para rotas tratarem falta de banco
+- user_loader retorna None se banco estiver indisponível
+- Rota de login trata exceções de banco com flash message
+
+04/06/2026
+- Migração para PostgreSQL via Neon (banco persistente no Vercel)
+- Criação automática do usuário bela/123456 junto com admin na primeira execução
+- Script seed.py para popular/atualizar usuários manualmente
+- Configuração da DATABASE_URL como variável de ambiente no Vercel
+
+04/06/2026
+- Correção: substitui get_or_404 por get + flash em excluir_funcionario (evita 404 quando ID não existe)
+
+04/06/2026
+- Correção geral: removidos todos os get_or_404 do código (configuracoes, pedidos, caixa, estoque, cardapio)
+- Agora registros não encontrados mostram flash message em vez de página 404
+- Banco de dados não perde mais referências (itens, mesas, funcionários permanecem no PostgreSQL)
+
+05/06/2026
+- Seed do cardápio completo: 35 produtos em 6 categorias
+- Adicionados acompanhamentos: Baião (R$10) e Maria Isabel (R$10)
+- Script seed_cardapio.py para popular/atualizar o menu
+
+05/06/2026
+- Seed do estoque completo: 34 insumos em 3 categorias (espetos, cervejas, refrigerantes)
+- Script seed_estoque.py para popular/atualizar o estoque
+
+05/06/2026
+- Vinculação de 33 produtos do cardápio aos insumos do estoque
+- Controle automático de baixa de estoque ao vender
+- Script vincular_insumos.py para gerenciar os vínculos
+
+05/06/2026
+- Nova categoria 'acompanhamentos' em CATEGORIAS_INSUMO
+- Batata e Macaxeira movidos para 'acompanhamentos' (unidade: porção)
+- Insumos criados: Baião (porção), Maria Isabel (porção)
+- Produtos Baião e Maria Isabel vinculados aos novos insumos
+- Scripts seed_estoque.py e vincular_insumos.py atualizados
+
+05/06/2026
+- Insumos de espetos alterados de kg para un (unidade)
+- qtd_insumo dos produtos ajustada para 1 (cada venda = 1 espeto)
+- Scripts seed_estoque.py e vincular_insumos.py atualizados
+
+05/06/2026
+- Seed completo no PostgreSQL (Neon): 2 usuarios, 6 categorias, 35 produtos, 36 insumos, 35 vinculos
+- Script seed_completo.py para popular tudo de uma vez
+
+05/06/2026
+- Correção: JavaScript duplicado em cardapio.html quebrava o editar produto
+
+05/06/2026
+- Removido campo Preço Unit. (R$) do formulário e exibição de insumos
+
+05/06/2026
+- Correção: query de estoque baixo no dashboard agora mostra insumos com quantidade zerada, independente de quantidade_minima
+
+05/06/2026
+- Card "Estoque Baixo" no dashboard agora é clicável e abre modal com lista detalhada dos insumos
+
+05/06/2026
+- Produtos no garçom agora agrupados por categoria (espetinhos, acompanhamentos, etc.)
+
+05/06/2026
+- Removido acesso da usuária bela à funcionalidade de Pedidos (menu oculto + bloqueio de rotas)
+
+05/06/2026
+- Pedidos Abertos: ícone de lixeira para remover itens individuais (com restauração de estoque)
+- Pedidos Abertos: botão Cancelar Pedido
+
+05/06/2026
+- Cardápio Online público: rota /cardapio/online com menu delivery, carrinho e checkout
+- Delivery management: página de gerenciamento com botões de status (em_preparo → pronto → entregue → pago)
+- Almoço admin: página /almoco para gerenciar cardápio da semana (descrição + valor por dia)
+- Almoço admin: itens avulsos vinculados a dias específicos (AlmocoDia)
+- Seção de Almoço no cardápio online com descrição diária e botão de adicionar ao carrinho
+- Modelos: CardapioAlmoco (descrição + preco por dia), AlmocoDia (produto × dia)
+- Removida aba "Todos" do cardápio online; Almoço aparece apenas ao clicar na aba específica
+- Removida categoria "Almoço" duplicada (desativada) que causava duas abas de almoço
+- Almoço no cardápio online segue mesmo estilo visual dos outros produtos
+- Botões + - e lixeira no carrinho agora atualizam quantidade e total em tempo real
+- Controles de + - do almoço resetam corretamente ao remover do carrinho
+- Corrigido salvamento do cardápio do almoço (cardapios dict guardava objeto em vez de string)
+
+06/06/2026
+- Redesenho completo do Cardápio Online: visual moderno premium (tema charcoal e glowing flame)
+- Adicionados badges informativos de avaliação, tempo de entrega e modalidade de entrega no Hero
+- Adicionado campo de busca em tempo real para busca rápida de produtos por nome ou descrição
+- Adicionados ícones temáticos coloridos em degradê para cada tipo de produto (espetinho, bebida, acompanhamento, almoço)
+- Redesenho dos controles de quantidade (+/-) em formato de pílula integrada e adaptada para toque mobile
+- Correção de bug crítico no checkout do cardápio online: prato de almoço do dia ('almoco') agora é resolvido no backend e salvo corretamente no banco de dados sob o produto virtual 'Almoço do Dia'
+- Adicionadas micro-interações: animação do carrinho flutuante, efeitos de escala ao clicar e rotação sutil no logo
+- Implementação de desativação do botão e spinner animado ao enviar pedido para evitar requisições duplicadas
+
+07/06/2026
+- Verificar Pedido: nova página pública /cardapio/online/status para cliente consultar status do pedido via número da comanda
+- Verificar Pedido: timeline visual (Em Preparo → Pronto → Saiu para Entrega → Entregue)
+- Alerta de atraso na cozinha: pedidos em preparo > 30min ficam com borda vermelha pulsante e badge "Atrasado"
+- Checkbox por item na cozinha: cada item do pedido tem checkbox individual que marca como pronto (persiste após recarregar)
+- Pedido volta para cozinha: ao adicionar espetinho/acompanhamento em pedido já pronto, status volta a "Em Preparo"
+- Cozinha: ordem de exibição sempre mostra "Em Preparo" primeiro, filtro "Todos" removido
+- Dashboard: faturamento agora usa pago_em (data de pagamento) em vez de criado_em
+- Dashboard: "Estoque Baixo" substituído por "Delivery Hoje"
+- Dashboard: "Pedidos Hoje" agora conta apenas pedidos via mesa
+- Pagamento centralizado: função marcar_pago() em utils.py com recalculo de total, bloqueio de duplicatas
+- Garçom: seção de Almoço incluída na criação de pedidos e no modal de adicionar item
+- Cardápio Online: Almoço agora aparece mesmo em dias sem cardápio semanal configurado
+- Removida seção "Itens Cadastrados" da página de almoço
+- Categoria "Almoço" desativada para não duplicar aba no cardápio online
+
+07/06/2026
+- Migração: adicionadas colunas faltantes (pago_em, ultimo_preparo_em, preco_unitario, quantidade, criado_em, pronto) no PostgreSQL da Neon
+- Correção: nome do dia no almoço (Domingo no lugar de "Hoje-Feira", dia real do cardápio no fallback de domingo)
+- Cardápio da Semana: cards redesenhados com mais espaço, inputs maiores
+- Toggle ON/OFF: switch por dia para ativar/desativar exibição no cardápio online
+- Apenas 1 cardápio ativo por vez — ao ativar um, os outros desativam automaticamente
+- Cardápio online e garçom filtrados por ativo=True
+
+07/06/2026
+- Dashboard: card "Delivery Hoje" substituído por "Estoque Baixo"
+- Dashboard: adicionado estoque_baixo ao dashboard_data()
+- Configurações: novo card "Dias de Funcionamento" (checkboxes Seg–Dom)
+- Cardápio online: mostra "Indisponível" se o dia de hoje não estiver marcado
+- Configurações: removido card "Estabelecimento" (nome, horários genéricos)
+- Modelo Categoria: adicionados campos abre/fecha (não utilizado no momento)
+- Rotas: salvar_dias() para persistir dias de funcionamento
+
+09/06/2026
+- Correção: cardápio online só funciona em dias com checkbox ativo; desmarcar = indisponível
+- Se nunca configurou, fallback para dias úteis (comportamento legado)
+- Removido link "Verificar Pedido" da tela de indisponível
+
+11/06/2026
+- Correção definitiva: campo produzido_cozinha movido de Insumo para Produto
+- Novo campo produzido_cozinha (Boolean) no modelo Produto — independe do insumo vinculado
+- Migration: coluna adicionada em produtos + seed dos valores (True para espetos, acompanhamentos e almoço)
+- Lógica de tem_cozinha agora usa produto.produzido_cozinha diretamente (routes/pedidos.py, cardapio.py)
+- Almoço do Dia criado com produzido_cozinha=True por padrão
+- Seed completo atualizado com produzido_cozinha em todos os produtos
+- Query da cozinha atualizada para usar Produto.produzido_cozinha
+
+11/06/2026
+- Resumo de vendas nos relatórios: cards de Total Arrecadado, Pedidos Mesa, Pedidos Delivery, Total Pedidos
+- API /relatorios/api/resumo com filtro por período
+- Restauração automática de estoque ao cancelar/excluir pedido
+- Correção: now_local() usa timezone.utc em vez de datetime.utcnow() depreciado
+- Correção: marcar_pago() trata preco_unitario nulo para evitar erro de total
+- Dias da semana no gráfico traduzidos para português (Seg, Ter, Qua...)
+
+23/06/2026
+- b772fc7 - AGENTS.md: seção "Atualizações" substituída por "Registro de Atualizações" — agora o agente registra toda alteração no atualizacoes.txt imediatamente após cada tarefa, sem depender de commit/push
+- Regras: data DD/MM/AAAA, entrada no final do arquivo, descrição clara e direta do que foi feito
+
+23/06/2026
+- b772fc7 - Correção crítica de fuso horário: `datetime.today().weekday()` substituído por `now_local().weekday()` em routes/cardapio.py e routes/pedidos.py
+- No Vercel (UTC), o dia consultado estava errado entre 21h-02h59 (horário Brasil), causando "Estamos Fechados" falso no cardápio online
+
+23/06/2026
+- b772fc7 - Cardápio: rota excluir agora deleta o produto do banco (antes só desativava)
+- Se o produto tiver pedidos vinculados, mostra aviso para desativar em vez de excluir
+
+23/06/2026
+- b772fc7 - Adicionado papel "entregador" no cadastro de funcionários (configurações)
+- Navegação "Entregas" no menu para usuários com role=entregador (aponta para /delivery/)
+- Bela (owner) já pode criar o usuário entregador pela página de Configurações
+
+23/06/2026
+- b772fc7 - Cardápio online: abas de categoria mudaram de scroll horizontal para flex-wrap — agora todas as categorias ficam visíveis sem esconder, quebrando para a linha seguinte quando necessário
+
+23/06/2026
+- b772fc7 - Delivery: auto-reload ajustado de 30s para 20s
+
+23/06/2026
+- 51e02be - Correção: entregador agora é redirecionado para /delivery/ ao invés do Dashboard (routes/dashboard.py e routes/auth.py)
+- 51e02be - Login redireciona por role: entregador → delivery, garçom → pedidos, cozinha → cozinha
+
+23/06/2026
+- 4a34db1 - Cozinha: filtro para exibir apenas itens com produzido_cozinha=True (mesa) ou todos itens (delivery)
+- 4a34db1 - Garçom: ao clicar em "Almoço do Dia" abre modal com campo de observações
+- 4a34db1 - Observações do almoço aparecem no carrinho, na comanda do garçom, na cozinha e no delivery
+- 4a34db1 - Modal "Adicionar Item" também exibe campo de observações quando almoço é selecionado
+- 4a34db1 - Modal "Adicionar Item": botões de produto agora mostram ícones de alerta (estoque baixo/sem receita) como no formulário de novo pedido
+
+23/06/2026
+- Impressão automática na HPRT MPT-II ao criar pedido delivery (cardapio.py) e mesa (pedidos.py)
+- Nova função imprimir_pedido() em utils.py com formato de comanda via ESC/POS e win32print
+- Adicionado pywin32 ao requirements.txt
+- Corrigido StartDocPrinter (assinatura errada)
+- Menu: removido bloqueio de Pedidos para Bela; adicionados links fixos Garçom e Cozinha para role owner
+
+23/06/2026
+- Cozinha: botão "Pronto" do pedido agora marca todos os itens como pronto (item.pronto = True) e risca na tela
+- Cozinha: ao clicar "Pronto", redireciona com ?filter=pronto para mostrar o filtro "Pronto" automaticamente
+- Estoque: toggle "Produzido na Cozinha" no insumo agora sincroniza com todos os produtos vinculados (Produto.produzido_cozinha)
+- Cardápio: adicionado checkbox "Produzido na Cozinha" no formulário de criar/editar produto
+- Cozinha: query e template agora verificam tanto Produto.produzido_cozinha quanto Insumo.produzido_cozinha (fallback)
+- Correção: itens com o toggle de cozinha marcado agora aparecem corretamente na tela da cozinha
+- Correção: redirects agora usam _redirect_back() baseado no referrer — owner (Bela) ao usar a aba Garçom não é mais redirecionado para /pedidos/ (lista geral)
+- Garçom: adicionado campo de busca para filtrar pedidos abertos por mesa, cliente ou nº
+- Pedidos (lista geral): cards restaurados ao layout original, campo de busca, removido "Novo Pedido" e modal
+- CSS: .pedido-card agora é flex column com .pedido-body flex:1 para alinhar cards na grade
+
+24/06/2026
+- Pagamento dividido: modelo PagamentoParcial para múltiplas formas por pedido
+- Caixa e Garçom: checkbox "Dividir pagamento" revela 3 campos fixos (Dinheiro, PIX, Cartão)
+- Modo normal (única forma) mantido como padrão — só usa split quem marcar o checkbox
+- marcar_pago() agora cria registro em PagamentoParcial
+- Nova função processar_pagamentos() para pagamentos com múltiplas formas
+- Dashboard, relatórios e resumo do caixa agregam por PagamentoParcial
+- Impressão térmica exibe detalhamento dos pagamentos parciais
+- Migração retroativa: pedidos já pagos ganham registro em PagamentoParcial
+- Templates (comanda, delivery, garçom): exibem múltiplos pagamentos quando forma=multi
+- AGENTS.md: adicionada seção "Testes Automatizados" — toda nova funcionalidade deve incluir teste
+- test_funcional.py reescrito: 42 testes dinâmicos (descobre produtos/mesas via API, sem IDs fixos)
+- Cobertura: pedidos, pagamento único, pagamento dividido, garçom normal/split, cancelamento,
+  delivery, relatórios (vendas, resumo, CSV), e todas as páginas do sistema
+- Testes de cozinha (19 novos): toggle produzi_cozinha no produto, pedido aparece na cozinha,
+  toggle individual item-pronto, verificação de riscado (item-feito), desmarcar item,
+  batch Pronto, pedido aparece como "Pronto" na cozinha, pagamento pós-cozinha,
+  delivery na cozinha com bebida (sem flag cozinha) — todos os itens aparecem,
+  ícone delivery (fa-motorcycle), nome do item visível, avanço de status
+- Fix: rota mudar_status agora bloqueia status 'entregue' para pedidos tipo mesa
+  (apenas delivery pode usar 'entregue'). Testes validam bloqueio.
+- Financeiro: novo módulo para Bela lançar despesas manuais
+  - Modelo LancamentoFinanceiro (descricao, tipo, valor, categoria, data)
+  - Rota /financeiro/: listar, salvar, excluir
+  - Template financeiro.html: categoria como input livre (com datalist sugestivo), tipo fixo "saida"
+  - Resumo simplificado: Total Despesas + Total Lançamentos
+  - 6 testes financeiro (criar despesa, criar segunda, listar, excluir)
+

@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block page_title %}Estoque{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-header-actions">
+        <button class="btn btn-secondary" onclick="openModal('categoriaModal')">
+            <i class="fas fa-tag"></i> Nova Categoria
+        </button>
+        <button class="btn btn-primary" onclick="openModal('insumoModal')">
+            <i class="fas fa-plus"></i> Novo Insumo
+        </button>
+    </div>
+</div>
+
+<div class="estoque-categorias">
+    {% for cat_obj in CATEGORIAS_BD %}
+    {% set cat = cat_obj.nome %}
+    {% set insumos = categorias[cat] %}
+    <div class="estoque-categoria">
+        <h2 class="categoria-titulo">
+            <i class="fas fa-tag"></i>
+            {{ cat|replace('_', ' ')|capitalize }}
+            <a href="{{ url_for('estoque.excluir_categoria', id=cat_obj.id) }}" class="btn-icon btn-danger" style="margin-left:auto;font-size:0.75rem" onclick="return confirm('Excluir categoria {{ cat }}?')" title="Excluir categoria"><i class="fas fa-times"></i></a>
+        </h2>
+        <div class="insumos-grid">
+            {% for insumo in insumos %}
+            <div class="insumo-card {{ 'estoque-baixo' if insumo.quantidade <= insumo.quantidade_minima and insumo.quantidade_minima > 0 }}">
+                <div class="insumo-header">
+                    <h3>{{ insumo.nome }}</h3>
+                    <label class="toggle-cozinha" title="Produzido na Cozinha">
+                        <input type="checkbox" class="cozinha-check" data-id="{{ insumo.id }}" {% if insumo.produzido_cozinha %}checked{% endif %}>
+                        <span class="toggle-slider"><i class="fas fa-utensils"></i></span>
+                    </label>
+                    <div style="display:flex;gap:0.3rem;flex-wrap:wrap">
+                    {% if insumo.quantidade <= insumo.quantidade_minima and insumo.quantidade_minima > 0 %}
+                    <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Baixo</span>
+                    {% endif %}
+                    </div>
+                </div>
+                <div class="insumo-body">
+                    <div class="insumo-qtd">
+                        <span class="qtd-value">{{ "%.1f"|format(insumo.quantidade) }}</span>
+                        <span class="qtd-unidade">{{ insumo.unidade }}</span>
+                    </div>
+                    {% if insumo.quantidade_minima > 0 %}
+                    <div class="insumo-minimo">Mín: {{ "%.1f"|format(insumo.quantidade_minima) }} {{ insumo.unidade }}</div>
+                    {% endif %}
+                </div>
+                <div class="insumo-actions">
+                    <button class="btn btn-sm btn-primary" onclick="movimentoEstoque({{ insumo.id }}, 'entrada', '{{ insumo.nome }}')">
+                        <i class="fas fa-plus-circle"></i> Entrada
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="movimentoEstoque({{ insumo.id }}, 'saida', '{{ insumo.nome }}')">
+                        <i class="fas fa-minus-circle"></i> Saída
+                    </button>
+                    <button class="btn-icon" onclick="editInsumo({{ insumo.id }}, '{{ insumo.nome }}', '{{ insumo.categoria }}', {{ insumo.quantidade }}, '{{ insumo.unidade }}', {{ insumo.quantidade_minima }})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <a href="{{ url_for('estoque.excluir', id=insumo.id) }}" class="btn-icon btn-danger" onclick="return confirm('Remover insumo?')">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state full-width">
+                <i class="fas fa-boxes"></i>
+                <p>Nenhum insumo nesta categoria</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="modal" id="categoriaModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Nova Categoria</h3>
+            <button class="modal-close" onclick="closeModal('categoriaModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('estoque.salvar_categoria') }}">
+            <div class="form-group">
+                <label for="cat_nome">Nome da Categoria</label>
+                <input type="text" id="cat_nome" name="nome" required placeholder="Ex: porcoes, bebidas_quentes">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Criar Categoria</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="insumoModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="insumoModalTitle">Novo Insumo</h3>
+            <button class="modal-close" onclick="closeModal('insumoModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('estoque.salvar') }}">
+            <input type="hidden" name="id" id="insumoId">
+            <div class="form-group">
+                <label for="insumo_nome">Nome do Insumo</label>
+                <input type="text" id="insumo_nome" name="nome" required>
+            </div>
+            <div class="form-group">
+                <label for="insumo_categoria">Categoria</label>
+                <select id="insumo_categoria" name="categoria">
+                    {% for cat in CATEGORIAS_INSUMO %}
+                    <option value="{{ cat }}">{{ cat|replace('_', ' ')|capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="insumo_qtd">Quantidade</label>
+                    <input type="text" id="insumo_qtd" name="quantidade" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label for="insumo_unidade">Unidade</label>
+                    <select id="insumo_unidade" name="unidade">
+                        <option value="un">Unidade</option>
+                        <option value="kg">Quilograma (kg)</option>
+                        <option value="g">Grama (g)</option>
+                        <option value="L">Litro (L)</option>
+                        <option value="ml">Mililitro (ml)</option>
+                        <option value="cx">Caixa</option>
+                        <option value="pc">Peça</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="insumo_minimo">Qtd. Mínima</label>
+                <input type="text" id="insumo_minimo" name="quantidade_minima" placeholder="0">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Salvar</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="movimentoModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="movimentoModalTitle">Movimentar Estoque</h3>
+            <button class="modal-close" onclick="closeModal('movimentoModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('estoque.movimento') }}">
+            <input type="hidden" name="insumo_id" id="movimentoInsumoId">
+            <input type="hidden" name="tipo" id="movimentoTipo">
+            <div class="form-group">
+                <label id="movimentoInsumoLabel">Insumo</label>
+                <p class="form-text" id="movimentoInsumoNome"></p>
+            </div>
+            <div class="form-group">
+                <label for="movimentoQtd">Quantidade</label>
+                <input type="text" id="movimentoQtd" name="quantidade" required>
+            </div>
+            <div class="form-group">
+                <label for="movimentoObs">Observação</label>
+                <textarea id="movimentoObs" name="observacao" rows="2"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" id="movimentoBtn">Confirmar</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editInsumo(id, nome, categoria, qtd, unidade, minima) {
+    document.getElementById('insumoId').value = id;
+    document.getElementById('insumo_nome').value = nome;
+    document.getElementById('insumo_categoria').value = categoria;
+    document.getElementById('insumo_qtd').value = qtd;
+    document.getElementById('insumo_unidade').value = unidade;
+    document.getElementById('insumo_minimo').value = minima;
+    document.getElementById('insumoModalTitle').textContent = 'Editar Insumo';
+    openModal('insumoModal');
+}
+
+function movimentoEstoque(id, tipo, nome) {
+    document.getElementById('movimentoInsumoId').value = id;
+    document.getElementById('movimentoTipo').value = tipo;
+    document.getElementById('movimentoInsumoNome').textContent = nome;
+    document.getElementById('movimentoQtd').value = '';
+    document.getElementById('movimentoObs').value = '';
+    document.getElementById('movimentoModalTitle').textContent = tipo === 'entrada' ? 'Entrada de Estoque' : 'Saída de Estoque';
+    document.getElementById('movimentoBtn').textContent = tipo === 'entrada' ? 'Registrar Entrada' : 'Registrar Saída';
+    document.getElementById('movimentoBtn').className = `btn btn-block ${tipo === 'entrada' ? 'btn-success' : 'btn-warning'}`;
+    openModal('movimentoModal');
+}
+
+function openModal(id) {
+    document.getElementById(id).style.display = 'flex';
+}
+
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+
+document.querySelectorAll('.cozinha-check').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+        var id = this.getAttribute('data-id');
+        fetch('/estoque/toggle-cozinha/' + id, { method: 'POST' })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (!d.produzido_cozinha) {
+                    cb.checked = false;
+                }
+            })
+            .catch(function() { cb.checked = !cb.checked; });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block page_title %}Configurações{% endblock %}
+{% block content %}
+<div class="config-container">
+    <div class="config-grid">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-chair"></i> Mesas</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('config.salvar_mesa') }}" class="inline-form">
+                    <input type="hidden" name="id" id="mesaId">
+                    <div class="form-group">
+                        <label for="mesaNumero">Número da Mesa</label>
+                        <input type="number" id="mesaNumero" name="numero" required min="1">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Adicionar
+                    </button>
+                </form>
+                <div class="mesas-list">
+                    {% for mesa in mesas %}
+                    <div class="mesa-item">
+                        <span><i class="fas fa-chair"></i> Mesa {{ mesa.numero }}</span>
+                        <a href="{{ url_for('config.excluir_mesa', id=mesa.id) }}" class="btn-icon btn-danger"
+                           onclick="return confirm('Remover mesa?')">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                    {% else %}
+                    <p class="empty-state">Nenhuma mesa cadastrada</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-calendar-check"></i> Dias de Funcionamento</h3>
+            </div>
+            <div class="card-body">
+                <p style="font-size:0.82rem;color:var(--text-light);margin-bottom:1rem;">
+                    Marque os dias e defina os horários de funcionamento.
+                </p>
+                {% set dias_nomes = ['Segunda-Feira', 'Terça-Feira', 'Quarta-Feira', 'Quinta-Feira', 'Sexta-Feira', 'Sábado', 'Domingo'] %}
+                {% set dias_raw = configs.get('dias_funcionamento', '{}') %}
+                {% if dias_raw.startswith('{') %}
+                {% set dias_data = dias_raw|from_json %}
+                {% else %}
+                {% set dias_data = {} %}
+                {% set dias_old = dias_raw.split(',') %}
+                {% endif %}
+                <form method="POST" action="{{ url_for('config.salvar_dias') }}" style="display:flex;flex-direction:column;gap:0.75rem;">
+                    {% for i in range(7) %}
+                    {% if dias_data %}
+                    {% set d = dias_data.get(i|string, {}) %}
+                    {% set ativo = d.get('ativo', false) %}
+                    {% set turnos = d.get('turnos', []) %}
+                    {% else %}
+                    {% set ativo = i|string in dias_old %}
+                    {% set turnos = [{'abre': '10:00','fecha': '15:00'}, {'abre': '18:00','fecha': '23:59'}] if ativo else [] %}
+                    {% endif %}
+                    <div style="border:1.5px solid var(--gray-200);border-radius:10px;padding:0.75rem;background:var(--gray-100);">
+                        <label style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem;cursor:pointer;">
+                            <input type="checkbox" name="dias" value="{{ i }}" onchange="toggleDia(this, {{ i }})" {% if ativo %}checked{% endif %} style="width:18px;height:18px;accent-color:var(--success);">
+                            <span style="font-weight:700;font-size:0.9rem;">{{ dias_nomes[i] }}</span>
+                        </label>
+                        <div id="turnos-{{ i }}" style="display:flex;flex-direction:column;gap:0.5rem;{% if not ativo %}opacity:0.4;pointer-events:none;{% endif %}">
+                            <div style="display:flex;flex-direction:column;gap:0.35rem;padding:0.5rem;background:var(--card-bg);border-radius:8px;border:1px solid var(--gray-200);">
+                                <div style="display:flex;align-items:center;gap:0.3rem;">
+                                    <span style="font-size:0.78rem;color:var(--text-light);width:22px;text-align:right;font-weight:700;">1º</span>
+                                    <input type="time" name="abre1_{{ i }}" value="{{ turnos[0].abre if turnos and turnos|length > 0 else '' }}" style="flex:1;min-width:0;padding:0.35rem 0.4rem;border:1.5px solid var(--gray-200);border-radius:6px;font-size:0.82rem;">
+                                    <span style="font-size:0.78rem;color:var(--text-light);flex-shrink:0;">às</span>
+                                    <input type="time" name="fecha1_{{ i }}" value="{{ turnos[0].fecha if turnos and turnos|length > 0 else '' }}" style="flex:1;min-width:0;padding:0.35rem 0.4rem;border:1.5px solid var(--gray-200);border-radius:6px;font-size:0.82rem;">
+                                </div>
+                                <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
+                                    {% for cat in categorias %}
+                                    <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.25rem;cursor:pointer;background:var(--gray-100);padding:0.15rem 0.5rem;border-radius:6px;">
+                                        <input type="checkbox" name="cat1_{{ i }}" value="{{ cat.nome }}" {% if turnos and turnos|length > 0 and cat.nome in turnos[0].get('categorias', []) %}checked{% endif %} style="accent-color:var(--orange);">
+                                        {{ cat.nome }}
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:0.35rem;padding:0.5rem;background:var(--card-bg);border-radius:8px;border:1px solid var(--gray-200);">
+                                <div style="display:flex;align-items:center;gap:0.3rem;">
+                                    <span style="font-size:0.78rem;color:var(--text-light);width:22px;text-align:right;font-weight:700;">2º</span>
+                                    <input type="time" name="abre2_{{ i }}" value="{{ turnos[1].abre if turnos and turnos|length > 1 else '' }}" style="flex:1;min-width:0;padding:0.35rem 0.4rem;border:1.5px solid var(--gray-200);border-radius:6px;font-size:0.82rem;">
+                                    <span style="font-size:0.78rem;color:var(--text-light);flex-shrink:0;">às</span>
+                                    <input type="time" name="fecha2_{{ i }}" value="{{ turnos[1].fecha if turnos and turnos|length > 1 else '' }}" style="flex:1;min-width:0;padding:0.35rem 0.4rem;border:1.5px solid var(--gray-200);border-radius:6px;font-size:0.82rem;">
+                                </div>
+                                <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
+                                    {% for cat in categorias %}
+                                    <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.25rem;cursor:pointer;background:var(--gray-100);padding:0.15rem 0.5rem;border-radius:6px;">
+                                        <input type="checkbox" name="cat2_{{ i }}" value="{{ cat.nome }}" {% if turnos and turnos|length > 1 and cat.nome in turnos[1].get('categorias', []) %}checked{% endif %} style="accent-color:var(--orange);">
+                                        {{ cat.nome }}
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary btn-block" style="margin-top:0.5rem;">
+                        <i class="fas fa-save"></i> Salvar Dias e Horários
+                    </button>
+                </form>
+            </div>
+        </div>
+        <script>
+        function toggleDia(checkbox, i) {
+            const div = document.getElementById('turnos-' + i);
+            if (checkbox.checked) {
+                div.style.opacity = '1';
+                div.style.pointerEvents = 'auto';
+            } else {
+                div.style.opacity = '0.4';
+                div.style.pointerEvents = 'none';
+            }
+        }
+        </script>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-users"></i> Funcionários</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('config.salvar_funcionario') }}" class="form-stacked">
+                    <div class="form-group">
+                        <label for="funcNome">Nome</label>
+                        <input type="text" id="funcNome" name="nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="funcSenha">Senha</label>
+                        <input type="password" id="funcSenha" name="senha" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="funcRole">Nível de Acesso</label>
+                        <select id="funcRole" name="role">
+                            <option value="garcom">Garçom</option>
+                            <option value="cozinha">Cozinha</option>
+                            <option value="entregador">Entregador</option>
+                            <option value="owner">Proprietário</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-user-plus"></i> Cadastrar
+                    </button>
+                </form>
+                <div class="funcionarios-list" style="margin-top: 1.5rem">
+                    {% for user in usuarios %}
+                    <div class="funcionario-item">
+                        <div class="func-info">
+                            <i class="fas fa-user-circle"></i>
+                            <span>{{ user.nome }}</span>
+                            <span class="badge badge-role">{{ user.role }}</span>
+                        </div>
+                        {% if user.id != current_user.id %}
+                        <a href="{{ url_for('config.excluir_funcionario', id=user.id) }}" class="btn-icon btn-danger"
+                           onclick="return confirm('Remover funcionário?')">
+                            <i class="fas fa-user-minus"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

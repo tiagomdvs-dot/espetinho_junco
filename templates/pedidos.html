@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block page_title %}Pedidos{% endblock %}
+{% block content %}
+<div class="filter-tabs">
+    <button class="filter-btn active" data-filter="todos">Todos</button>
+    <button class="filter-btn" data-filter="em_preparo">Em Preparo</button>
+    <button class="filter-btn" data-filter="pronto">Pronto</button>
+    <button class="filter-btn" data-filter="entregue">Entregue</button>
+    <button class="filter-btn" data-filter="pago">Pagos</button>
+</div>
+
+<div style="position:relative;margin-bottom:1rem">
+    <i class="fas fa-search" style="position:absolute;left:0.7rem;top:50%;transform:translateY(-50%);color:var(--text-light);font-size:0.85rem;pointer-events:none"></i>
+    <input type="text" id="pedidoListSearch" placeholder="Buscar por nº, mesa ou cliente..." style="width:100%;padding:0.55rem 0.5rem 0.55rem 2rem;border-radius:8px;border:1px solid var(--border);background:var(--bg-panel);color:var(--text);font-size:0.85rem" oninput="filtrarLista(this.value)">
+</div>
+
+<div class="pedidos-grid">
+    {% for pedido in pedidos %}
+    <div class="pedido-card status-{{ pedido.status }}" data-status="{{ pedido.status }}" data-mesa="{{ pedido.mesa.numero if pedido.mesa else '' }}" data-cliente="{{ pedido.cliente_nome or '' }}">
+        <div class="pedido-header">
+            <div class="pedido-id">#{{ pedido.id }}</div>
+            <span class="pedido-status status-{{ pedido.status }}">
+                {% if pedido.status == 'em_preparo' %}<i class="fas fa-cog fa-spin"></i>
+                {% elif pedido.status == 'pronto' %}<i class="fas fa-check-circle"></i>
+                {% elif pedido.status == 'entregue' %}<i class="fas fa-hand-peace"></i>
+                {% elif pedido.status == 'pago' %}<i class="fas fa-check-double"></i>
+                {% elif pedido.status == 'cancelado' %}<i class="fas fa-times-circle"></i>{% endif %}
+                {{ pedido.status|replace('_', ' ')|capitalize }}
+            </span>
+        </div>
+        <div class="pedido-body">
+            <div class="pedido-cliente">
+                <i class="fas fa-user"></i>
+                {{ pedido.cliente_nome or ('Mesa ' ~ pedido.mesa.numero if pedido.mesa else 'Cliente') }}
+            </div>
+            <div class="pedido-info-row">
+                <span>{% if pedido.tipo == 'mesa' %}<i class="fas fa-chair"></i>{% else %}<i class="fas fa-motorcycle"></i>{% endif %} {{ pedido.tipo|capitalize }}</span>
+                <span><i class="fas fa-clock"></i> {{ pedido.criado_em.strftime('%H:%M') if pedido.criado_em else '' }}</span>
+            </div>
+            <div class="pedido-itens">
+                {% for item in pedido.itens %}
+                <div class="pedido-item">
+                    <span class="item-qtd">{{ item.quantidade }}x</span>
+                    <span class="item-nome">{{ item.produto.nome if item.produto else 'Item' }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% if pedido.observacao %}
+            <div class="pedido-obs">
+                <i class="fas fa-comment"></i> {{ pedido.observacao }}
+            </div>
+            {% endif %}
+            <div class="pedido-total">
+                <span>Total:</span>
+                <strong>R$ {{ pedido.total or 0|brl }}</strong>
+            </div>
+        </div>
+        <div class="pedido-actions">
+            {% if pedido.status == 'em_preparo' %}
+            <a href="{{ url_for('pedidos.mudar_status', id=pedido.id, status='pronto') }}" class="btn btn-success btn-sm">
+                <i class="fas fa-check"></i> Pronto
+            </a>
+            <button class="btn btn-primary btn-sm" onclick="openModal('itemModal', {{ pedido.id }})">
+                <i class="fas fa-plus"></i> Item
+            </button>
+            {% elif pedido.status == 'pronto' %}
+            <a href="{{ url_for('pedidos.mudar_status', id=pedido.id, status='entregue') }}" class="btn btn-success btn-sm">
+                <i class="fas fa-hand-peace"></i> Entregar
+            </a>
+            {% elif pedido.status == 'entregue' %}
+            <a href="{{ url_for('caixa.index') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-cash-register"></i> Caixa
+            </a>
+            {% endif %}
+            <a href="{{ url_for('pedidos.excluir', id=pedido.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Cancelar pedido?')">
+                <i class="fas fa-times"></i>
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state full-width">
+        <i class="fas fa-clipboard-list"></i>
+        <p>Nenhum pedido ainda</p>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="modal" id="itemModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Adicionar Item</h3>
+            <button class="modal-close" onclick="closeModal('itemModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('pedidos.adicionar_item') }}">
+            <input type="hidden" name="pedido_id" id="itemPedidoId">
+            <div class="form-group">
+                <label for="produto_id">Produto</label>
+                <select name="produto_id" required>
+                    <option value="">Selecione</option>
+                    {% for p in produtos %}
+                    <option value="{{ p.id }}">{{ p.nome }} - R$ {{ p.preco|brl }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="quantidade">Quantidade</label>
+                <input type="number" name="quantidade" value="1" min="1" required>
+            </div>
+            <div class="form-group">
+                <label for="observacao_item">Observação</label>
+                <textarea name="observacao" id="observacao_item" rows="2"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Adicionar</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openModal(id, pedidoId) {
+    document.getElementById(id).style.display = 'flex';
+    if (pedidoId) {
+        document.getElementById('itemPedidoId').value = pedidoId;
+    }
+}
+
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const filter = this.dataset.filter;
+        document.querySelectorAll('.pedido-card').forEach(card => {
+            if (filter === 'todos' || card.dataset.status === filter) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+});
+
+function filtrarLista(query) {
+    const cards = document.querySelectorAll('.pedido-card');
+    const q = query.toLowerCase().trim();
+    cards.forEach(function(card) {
+        const mesa = card.getAttribute('data-mesa');
+        const cliente = card.getAttribute('data-cliente').toLowerCase();
+        const pedidoId = card.querySelector('.pedido-id')?.textContent.replace('#', '') || '';
+        const match = !q || mesa.includes(q) || cliente.includes(q) || pedidoId.includes(q);
+        card.style.display = match ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

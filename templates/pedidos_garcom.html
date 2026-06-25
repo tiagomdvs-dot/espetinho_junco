@@ -1,0 +1,583 @@
+{% extends "base.html" %}
+{% block page_title %}Novo Pedido{% endblock %}
+{% block content %}
+<div class="garcom-layout">
+    <div class="garcom-form-card">
+        <div class="tipo-selector">
+            <button class="tipo-btn active" data-tipo="mesa" type="button" onclick="selectTipo('mesa')">
+                <i class="fas fa-chair"></i>
+                <span>Mesa</span>
+            </button>
+        </div>
+
+        <form method="POST" action="{{ url_for('pedidos.criar_completo') }}" id="pedidoForm">
+            <input type="hidden" name="tipo" id="tipoInput" value="mesa">
+            <input type="hidden" name="itens" id="itensInput" value="[]">
+
+            <div class="form-group" id="mesaGroup">
+                <label for="mesa_id">Mesa</label>
+                <select name="mesa_id" id="mesa_id" required>
+                    <option value="">Selecione a mesa</option>
+                    {% for mesa in mesas %}
+                    <option value="{{ mesa.id }}" {% if mesa.id in mesas_ocupadas %}disabled{% endif %}>
+                        Mesa {{ mesa.numero }}{% if mesa.id in mesas_ocupadas %} (Ocupada){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="cliente_nome">Cliente</label>
+                <input type="text" name="cliente_nome" id="cliente_nome" placeholder="Nome do cliente">
+            </div>
+
+            <div class="form-group">
+                <label>Itens do Pedido</label>
+                {% if almoco_hoje or almoco_produtos %}
+                <div style="margin-bottom:0.75rem">
+                    <h4 style="font-size:0.85rem;color:var(--success);margin-bottom:0.4rem;padding:0 0.25rem">
+                        <i class="fas fa-sun" style="color:var(--success)"></i> Almoço
+                        {% if almoco_hoje %} — {{ almoco_hoje.dia }}{% if almoco_hoje.dia != 'Sábado' %}-Feira{% endif %}{% endif %}
+                    </h4>
+                    {% if almoco_hoje %}
+                    <div class="produto-item-card" data-id="almoco" data-nome="Almoço - {{ almoco_hoje.dia }}" data-preco="{{ almoco_hoje.preco }}" onclick="openAlmocoObs()">
+                        <div class="produto-item-info">
+                            <strong>Almoço do Dia</strong>
+                            <span style="font-size:0.78rem;color:var(--text-light);display:block;margin-top:0.15rem">{{ almoco_hoje.descricao[:60] }}{% if almoco_hoje.descricao|length > 60 %}...{% endif %}</span>
+                            <span class="produto-item-preco">R$ {{ almoco_hoje.preco|brl }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if almoco_produtos %}
+                    <div class="garcom-produtos-grid">
+                        {% for p in almoco_produtos %}
+                        <div class="produto-item-card" data-id="{{ p.id }}" data-nome="{{ p.nome }}" data-preco="{{ p.preco }}" onclick="addItem({{ p.id }}, '{{ p.nome }}', {{ p.preco }})">
+                            <div class="produto-item-info">
+                                <strong>{{ p.nome }}</strong>
+                                <span class="produto-item-preco">R$ {{ p.preco|brl }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% for cat in categorias %}
+                {% set cat_produtos = produtos|selectattr('categoria_id', 'equalto', cat.id)|list %}
+                {% if cat_produtos %}
+                <div style="margin-bottom:0.75rem">
+                    <h4 style="font-size:0.85rem;color:var(--text-light);margin-bottom:0.4rem;padding:0 0.25rem">
+                        <i class="fas fa-tag" style="color:var(--orange)"></i> {{ cat.nome }}
+                    </h4>
+                    <div class="garcom-produtos-grid">
+                        {% for p in cat_produtos %}
+                        <div class="produto-item-card {% if p.id not in produtos_com_receita %}sem-receita{% elif p.id in estoque_insuficiente %}estoque-insuficiente{% endif %}" data-id="{{ p.id }}" data-nome="{{ p.nome }}" data-preco="{{ p.preco }}" onclick="addItem({{ p.id }}, '{{ p.nome }}', {{ p.preco }})">
+                            <div class="produto-item-info">
+                                <strong>{{ p.nome }}</strong>
+                                <span class="produto-item-preco">R$ {{ p.preco|brl }}</span>
+                            </div>
+                            <div class="produto-item-meta">
+                                <span class="produto-item-tipo">{{ p.tipo|capitalize }}</span>
+                                {% if p.id not in produtos_com_receita %}
+                                <span class="produto-item-alerta" title="Sem receita no estoque"><i class="fas fa-exclamation-triangle"></i></span>
+                                {% elif p.id in estoque_insuficiente %}
+                                <span class="produto-item-alerta warning" title="Estoque insuficiente"><i class="fas fa-box-open"></i></span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            <div class="carrinho" id="carrinho">
+                <h4><i class="fas fa-shopping-cart"></i> Pedido</h4>
+                <div id="carrinhoItens"></div>
+                <div class="carrinho-total">
+                    <span>Total:</span>
+                    <strong id="carrinhoTotal">R$ 0,00</strong>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="btnFinalizar" disabled>
+                    <i class="fas fa-check"></i> Finalizar Pedido
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="garcom-orders">
+        <div class="garcom-mesas-status">
+            <h3><i class="fas fa-chair"></i> Mesas</h3>
+            <div class="mesas-grid">
+                {% for mesa in mesas %}
+                <span class="mesa-badge {% if mesa.id in mesas_ocupadas %}ocupada{% else %}livre{% endif %}">
+                    {{ mesa.numero }}
+                    <small>{% if mesa.id in mesas_ocupadas %}Ocupada{% else %}Livre{% endif %}</small>
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <h3><i class="fas fa-clipboard-list"></i> Pedidos Abertos</h3>
+        <div style="position:relative;margin-bottom:0.5rem">
+            <i class="fas fa-search" style="position:absolute;left:0.6rem;top:50%;transform:translateY(-50%);color:var(--text-light);font-size:0.8rem;pointer-events:none"></i>
+            <input type="text" id="pedidoSearch" placeholder="Buscar por mesa ou cliente..." style="width:100%;padding:0.45rem 0.5rem 0.45rem 1.8rem;border-radius:8px;border:1px solid var(--border);background:var(--bg-panel);color:var(--text);font-size:0.82rem" oninput="filtrarPedidos(this.value)">
+        </div>
+        <div class="garcom-orders-list">
+            {% for pedido in pedidos_abertos %}
+            <div class="order-mini-card status-{{ pedido.status }}" data-mesa="{{ pedido.mesa.numero if pedido.mesa else '' }}" data-cliente="{{ pedido.cliente_nome or '' }}">
+                <div class="order-mini-header">
+                    <strong>Pedido #{{ pedido.id }}</strong>
+                    <span class="status-badge status-{{ pedido.status }}">
+                        {% if pedido.status == 'em_preparo' %}<i class="fas fa-cog fa-spin"></i>
+                        {% elif pedido.status == 'pronto' %}<i class="fas fa-check-circle"></i>
+                        {% elif pedido.status == 'entregue' %}<i class="fas fa-hand-peace"></i>{% endif %}
+                        {{ pedido.status|replace('_', ' ')|capitalize }}
+                    </span>
+                </div>
+                <div class="order-mini-body">
+                    <span><i class="fas fa-user"></i> {{ pedido.cliente_nome or 'Mesa ' + (pedido.mesa.numero|string if pedido.mesa else '') }}</span>
+                    <span><i class="fas fa-clock"></i> {{ pedido.criado_em.strftime('%H:%M') if pedido.criado_em else '' }}</span>
+                    <span><i class="fas fa-tag"></i> {% if pedido.tipo == 'mesa' and pedido.mesa %}Mesa {{ pedido.mesa.numero }}{% else %}{{ pedido.tipo|capitalize }}{% endif %}</span>
+                    <span><i class="fas fa-box"></i> {{ pedido.itens|length }} itens</span>
+                    {% if pedido.forma_pagamento %}
+                    {% if pedido.forma_pagamento == 'multi' and pedido.pagamentos_parciais %}
+                    <span style="flex-wrap:wrap;gap:0.2rem">
+                        {% for pp in pedido.pagamentos_parciais %}
+                        <span style="display:inline-flex;align-items:center;gap:0.2rem;font-size:0.78rem;background:var(--gray-100);padding:0.1rem 0.4rem;border-radius:6px">
+                            {% if pp.forma_pagamento in ('dinheiro', 'especie') %}<i class="fas fa-money-bill"></i>
+                            {% elif pp.forma_pagamento == 'pix' %}<i class="fas fa-qrcode"></i>
+                            {% elif pp.forma_pagamento in ('cartao', 'cartão') %}<i class="fas fa-credit-card"></i>
+                            {% endif %}
+                            {{ pp.forma_pagamento|fmt_pagamento }} R${{ pp.valor|brl }}
+                        </span>
+                        {% endfor %}
+                    </span>
+                    {% else %}
+                    <span>
+                        {% if pedido.forma_pagamento in ('dinheiro', 'especie') %}<i class="fas fa-money-bill"></i>
+                        {% elif pedido.forma_pagamento == 'pix' %}<i class="fas fa-qrcode"></i>
+                        {% elif pedido.forma_pagamento in ('cartao', 'cartão') %}<i class="fas fa-credit-card"></i>
+                        {% else %}<i class="fas fa-receipt"></i>{% endif %}
+                        {{ pedido.forma_pagamento|fmt_pagamento }}
+                    </span>
+                    {% endif %}
+                    {% endif %}
+                </div>
+                <div class="order-mini-itens">
+                    {% for item in pedido.itens %}
+                    <div class="order-mini-item">
+                        <span class="item-qtd">{{ item.quantidade }}x</span>
+                        <span class="item-nome">{{ item.produto.nome if item.produto else 'Item' }}</span>
+                        <span class="item-valor">R$ {{ item.preco_unitario * item.quantidade|brl }}</span>
+                        {% if pedido.status in ('em_preparo', 'pronto') %}
+                        <button class="btn-icon btn-danger" style="font-size:0.8rem;min-width:32px;min-height:32px;width:32px;height:32px;padding:0" onclick="if(confirm('Remover {{ item.produto.nome if item.produto else 'Item' }} do pedido?'))window.location.href='{{ url_for('pedidos.remover_item', id=item.id) }}'" title="Remover item">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        {% endif %}
+                        {% if item.observacao %}
+                        <span class="item-obs-mini">{{ item.observacao }}</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="order-mini-total">
+                    <span>Total:</span>
+                    <strong>R$ {{ pedido.total or 0|brl }}</strong>
+                </div>
+                <div class="order-mini-footer">
+                    {% if pedido.status in ('em_preparo', 'pronto', 'entregue') %}
+                    <a href="{{ url_for('pedidos.comanda', id=pedido.id) }}" target="_blank" class="btn btn-sm btn-secondary" title="Imprimir Comanda">
+                        <i class="fas fa-receipt"></i>
+                    </a>
+                    <button class="btn btn-sm btn-primary" onclick="openAddItem({{ pedido.id }})">
+                        <i class="fas fa-plus"></i> Item
+                    </button>
+                    {% endif %}
+                    {% if pedido.status == 'pronto' %}
+                    <button class="btn btn-sm btn-success" onclick="openFinalizar({{ pedido.id }}, {{ pedido.total or 0 }})">
+                        <i class="fas fa-check"></i> Finalizar Mesa
+                    </button>
+                    {% endif %}
+                    {% if pedido.status in ('em_preparo', 'pronto', 'entregue') %}
+                    <button class="btn btn-sm btn-danger" onclick="if(confirm('Tem certeza que deseja cancelar o pedido #{{ pedido.id }}?'))window.location.href='{{ url_for('pedidos.mudar_status', id=pedido.id, status='cancelado') }}'">
+                        <i class="fas fa-ban"></i> Cancelar
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Nenhum pedido aberto</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="almocoObsModal">
+    <div class="modal-content" style="max-width:380px">
+        <div class="modal-header">
+            <h3><i class="fas fa-sun" style="color:var(--success)"></i> Almoço do Dia</h3>
+            <button class="modal-close" onclick="closeModal('almocoObsModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1rem">
+                {% if almoco_hoje %}{{ almoco_hoje.descricao }}{% endif %}
+            </p>
+            <div class="form-group">
+                <label for="almocoObsText">Observações <small style="color:var(--text-muted)">(opcional)</small></label>
+                <textarea id="almocoObsText" rows="3" style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid var(--border);background:var(--bg-panel);color:var(--text);font-family:inherit;font-size:0.85rem;resize:vertical" placeholder="Ex: sem cebola, bem passado, tirar salada..."></textarea>
+            </div>
+            <button class="btn btn-success btn-block" onclick="confirmAlmocoObs()">
+                <i class="fas fa-plus"></i> Adicionar ao Pedido
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="finalizarModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Finalizar Mesa</h3>
+            <button class="modal-close" onclick="closeModal('finalizarModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('pedidos.finalizar_mesa') }}" id="finalizarForm">
+            <input type="hidden" name="pedido_id" id="finalizarPedidoId">
+            <input type="hidden" name="pagamentos" id="finalizarPagamentosInput">
+            <div class="finalizar-total">
+                <span>Total:</span>
+                <strong id="finalizarTotal">R$ 0,00</strong>
+            </div>
+
+            <div id="finalizarNormal">
+                <div class="form-group">
+                    <label>Forma de Pagamento</label>
+                    <div class="pagamento-options">
+                        <label class="pagamento-option">
+                            <input type="radio" name="forma_pagamento" value="dinheiro" checked>
+                            <i class="fas fa-money-bill"></i>
+                            <span>Dinheiro</span>
+                        </label>
+                        <label class="pagamento-option">
+                            <input type="radio" name="forma_pagamento" value="pix">
+                            <i class="fas fa-qrcode"></i>
+                            <span>PIX</span>
+                        </label>
+                        <label class="pagamento-option">
+                            <input type="radio" name="forma_pagamento" value="cartao">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Cartão</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin:0.75rem 0">
+                <label class="toggle-label">
+                    <input type="checkbox" id="chkDividirFinalizar" onchange="toggleDividirFinalizar()">
+                    <span class="toggle-label-text"><i class="fas fa-split"></i> Dividir pagamento</span>
+                </label>
+            </div>
+
+            <div id="finalizarDividido" style="display:none">
+                <div class="divisa-linha">
+                    <span class="divisa-icon"><i class="fas fa-money-bill"></i> Dinheiro</span>
+                    <input type="text" class="divisa-valor" id="fvalDinheiro" placeholder="0,00" oninput="recalcularDivisaoFinalizar()">
+                </div>
+                <div class="divisa-linha">
+                    <span class="divisa-icon"><i class="fas fa-qrcode"></i> PIX</span>
+                    <input type="text" class="divisa-valor" id="fvalPix" placeholder="0,00" oninput="recalcularDivisaoFinalizar()">
+                </div>
+                <div class="divisa-linha">
+                    <span class="divisa-icon"><i class="fas fa-credit-card"></i> Cartão</span>
+                    <input type="text" class="divisa-valor" id="fvalCartao" placeholder="0,00" oninput="recalcularDivisaoFinalizar()">
+                </div>
+                <div class="divisa-resumo">
+                    <span>Total distribuído:</span>
+                    <strong id="fdivisaTotal">R$ 0,00</strong>
+                </div>
+                <div id="fdivisaErro" class="divisa-erro" style="display:none">
+                    A soma deve ser igual ao valor do pedido.
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-block" id="btnConfirmarFinalizar">
+                <i class="fas fa-check"></i> Confirmar Pagamento
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="addItemModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Adicionar Item</h3>
+            <button class="modal-close" onclick="closeModal('addItemModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('pedidos.adicionar_item') }}">
+            <input type="hidden" name="pedido_id" id="addItemPedidoId">
+            <div class="form-group">
+                <label>Produto</label>
+                {% if almoco_hoje or almoco_produtos %}
+                <div style="margin-bottom:0.5rem">
+                    <h4 style="font-size:0.8rem;color:var(--success);margin-bottom:0.35rem">
+                        <i class="fas fa-sun" style="color:var(--success)"></i> Almoço
+                    </h4>
+                    <div class="add-item-grid">
+                        {% if almoco_hoje %}
+                        <button type="button" class="add-item-btn" data-id="almoco" data-nome="Almoço - {{ almoco_hoje.dia }}" data-preco="{{ almoco_hoje.preco }}" onclick="selectProduto(this, 'almoco')">
+                            <strong>Almoço do Dia</strong>
+                            <span>R$ {{ almoco_hoje.preco|brl }}</span>
+                        </button>
+                        {% endif %}
+                        {% for p in almoco_produtos %}
+                        <button type="button" class="add-item-btn {% if p.id not in produtos_com_receita %}sem-receita{% elif p.id in estoque_insuficiente %}estoque-insuficiente{% endif %}" data-id="{{ p.id }}" data-nome="{{ p.nome }}" data-preco="{{ p.preco }}" onclick="selectProduto(this, {{ p.id }})">
+                            <strong>{{ p.nome }}</strong>
+                            <span>R$ {{ p.preco|brl }}</span>
+                            {% if p.id not in produtos_com_receita %}
+                            <span class="produto-item-alerta" title="Sem receita no estoque"><i class="fas fa-exclamation-triangle"></i></span>
+                            {% elif p.id in estoque_insuficiente %}
+                            <span class="produto-item-alerta warning" title="Estoque insuficiente"><i class="fas fa-box-open"></i></span>
+                            {% endif %}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% for cat in categorias %}
+                {% set cat_produtos = produtos|selectattr('categoria_id', 'equalto', cat.id)|list %}
+                {% if cat_produtos %}
+                <div style="margin-bottom:0.5rem">
+                    <h4 style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.35rem">
+                        <i class="fas fa-tag" style="color:var(--orange)"></i> {{ cat.nome }}
+                    </h4>
+                    <div class="add-item-grid">
+                        {% for p in cat_produtos %}
+                        <button type="button" class="add-item-btn {% if p.id not in produtos_com_receita %}sem-receita{% elif p.id in estoque_insuficiente %}estoque-insuficiente{% endif %}" data-id="{{ p.id }}" data-nome="{{ p.nome }}" data-preco="{{ p.preco }}" onclick="selectProduto(this, {{ p.id }})">
+                            <strong>{{ p.nome }}</strong>
+                            <span>R$ {{ p.preco|brl }}</span>
+                            {% if p.id not in produtos_com_receita %}
+                            <span class="produto-item-alerta" title="Sem receita no estoque"><i class="fas fa-exclamation-triangle"></i></span>
+                            {% elif p.id in estoque_insuficiente %}
+                            <span class="produto-item-alerta warning" title="Estoque insuficiente"><i class="fas fa-box-open"></i></span>
+                            {% endif %}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+                <input type="hidden" name="produto_id" id="addItemProdutoId" required>
+            </div>
+            <div class="form-group">
+                <label for="addItemQtd">Quantidade</label>
+                <input type="number" name="quantidade" id="addItemQtd" value="1" min="1">
+            </div>
+            <div class="form-group" id="addItemObsGroup" style="display:none">
+                <label for="addItemObs">Observações <small style="color:var(--text-muted)">(opcional)</small></label>
+                <textarea name="observacao" id="addItemObs" rows="2" style="width:100%;padding:0.5rem;border-radius:8px;border:1px solid var(--border);background:var(--bg-panel);color:var(--text);font-family:inherit;font-size:0.83rem;resize:vertical" placeholder="Ex: sem cebola, bem passado..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" id="addItemSubmit" disabled>
+                <i class="fas fa-plus"></i> Adicionar
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let carrinho = [];
+
+function selectTipo(tipo) {
+    document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.tipo-btn[data-tipo="${tipo}"]`).classList.add('active');
+    document.getElementById('tipoInput').value = tipo;
+    const mesaGroup = document.getElementById('mesaGroup');
+    mesaGroup.style.display = tipo === 'mesa' ? 'block' : 'none';
+    if (tipo !== 'mesa') document.getElementById('mesa_id').required = false;
+    else document.getElementById('mesa_id').required = true;
+}
+
+function openAlmocoObs() {
+    document.getElementById('almocoObsText').value = '';
+    openModal('almocoObsModal');
+}
+
+function confirmAlmocoObs() {
+    const obs = document.getElementById('almocoObsText').value.trim();
+    const nome = 'Almoço do Dia{% if almoco_hoje %} ({{ almoco_hoje.dia }}{% if almoco_hoje.dia != 'Sábado' %}-Feira{% endif %}){% endif %}';
+    addItem('almoco', nome, {{ almoco_hoje.preco if almoco_hoje else 0 }}, obs);
+    closeModal('almocoObsModal');
+}
+
+function addItem(id, nome, preco, observacao) {
+    const existente = carrinho.find(i => i.produto_id === id);
+    if (existente) {
+        existente.quantidade += 1;
+        if (observacao) existente.observacao = observacao;
+    } else {
+        carrinho.push({ produto_id: id, nome, preco, quantidade: 1, observacao: observacao || '' });
+    }
+    renderCarrinho();
+}
+
+function removeItem(id) {
+    carrinho = carrinho.filter(i => i.produto_id !== id);
+    renderCarrinho();
+}
+
+function changeQtd(id, delta) {
+    const item = carrinho.find(i => i.produto_id === id);
+    if (!item) return;
+    item.quantidade = Math.max(1, item.quantidade + delta);
+    renderCarrinho();
+}
+
+function renderCarrinho() {
+    const container = document.getElementById('carrinhoItens');
+    const totalEl = document.getElementById('carrinhoTotal');
+    const btn = document.getElementById('btnFinalizar');
+    const input = document.getElementById('itensInput');
+
+    if (carrinho.length === 0) {
+        container.innerHTML = '<div class="carrinho-vazio"><i class="fas fa-cart-plus"></i><p>Clique nos produtos acima</p></div>';
+        totalEl.textContent = 'R$ 0,00';
+        btn.disabled = true;
+        input.value = '[]';
+        return;
+    }
+
+    let html = '';
+    let total = 0;
+    carrinho.forEach(item => {
+        const subtotal = item.preco * item.quantidade;
+        total += subtotal;
+        html += `
+            <div class="carrinho-item">
+                <div class="carrinho-item-info">
+                    <span class="carrinho-item-nome">${item.nome}</span>
+                    ${item.observacao ? `<span class="carrinho-item-obs">${item.observacao}</span>` : ''}
+                    <span class="carrinho-item-preco">R$ ${item.preco.toFixed(2)}</span>
+                </div>
+                <div class="carrinho-item-qtd">
+                    <button type="button" class="qtd-btn" onclick="changeQtd(${item.produto_id}, -1)">-</button>
+                    <span>${item.quantidade}</span>
+                    <button type="button" class="qtd-btn" onclick="changeQtd(${item.produto_id}, 1)">+</button>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeItem(${item.produto_id})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+    totalEl.textContent = `R$ ${total.toFixed(2)}`;
+    btn.disabled = false;
+    input.value = JSON.stringify(carrinho.map(i => ({ produto_id: i.produto_id, quantidade: i.quantidade, observacao: i.observacao || '' })));
+}
+
+renderCarrinho();
+
+function filtrarPedidos(query) {
+    const cards = document.querySelectorAll('.order-mini-card');
+    const q = query.toLowerCase().trim();
+    cards.forEach(function(card) {
+        const mesa = card.getAttribute('data-mesa');
+        const cliente = card.getAttribute('data-cliente').toLowerCase();
+        const pedidoId = card.querySelector('.order-mini-header strong')?.textContent.toLowerCase() || '';
+        const match = !q || mesa.includes(q) || cliente.includes(q) || pedidoId.includes(q);
+        card.style.display = match ? '' : 'none';
+    });
+}
+
+let selectedProdutoId = null;
+
+function openAddItem(pedidoId) {
+    selectedProdutoId = null;
+    document.getElementById('addItemPedidoId').value = pedidoId;
+    document.getElementById('addItemProdutoId').value = '';
+    document.getElementById('addItemQtd').value = '1';
+    document.getElementById('addItemSubmit').disabled = true;
+    document.querySelectorAll('.add-item-btn').forEach(b => b.classList.remove('selected'));
+    openModal('addItemModal');
+}
+
+function selectProduto(el, id) {
+    document.querySelectorAll('.add-item-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedProdutoId = id;
+    document.getElementById('addItemProdutoId').value = id;
+    document.getElementById('addItemSubmit').disabled = false;
+    document.getElementById('addItemObsGroup').style.display = (id === 'almoco') ? 'block' : 'none';
+    if (id !== 'almoco') document.getElementById('addItemObs').value = '';
+}
+
+function openFinalizar(pedidoId, total) {
+    document.getElementById('finalizarPedidoId').value = pedidoId;
+    document.getElementById('finalizarTotal').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+    document.getElementById('finalizarTotal').setAttribute('data-total', total);
+    document.getElementById('chkDividirFinalizar').checked = false;
+    document.getElementById('finalizarDividido').style.display = 'none';
+    document.getElementById('finalizarNormal').style.display = 'block';
+    document.getElementById('fvalDinheiro').value = '';
+    document.getElementById('fvalPix').value = '';
+    document.getElementById('fvalCartao').value = '';
+    document.getElementById('btnConfirmarFinalizar').disabled = false;
+    openModal('finalizarModal');
+}
+
+function toggleDividirFinalizar() {
+    const dividir = document.getElementById('chkDividirFinalizar').checked;
+    document.getElementById('finalizarNormal').style.display = dividir ? 'none' : 'block';
+    document.getElementById('finalizarDividido').style.display = dividir ? 'block' : 'none';
+    if (dividir) recalcularDivisaoFinalizar();
+    else document.getElementById('btnConfirmarFinalizar').disabled = false;
+}
+
+function recalcularDivisaoFinalizar() {
+    const din = parseFloat(document.getElementById('fvalDinheiro').value.replace(',', '.')) || 0;
+    const pix = parseFloat(document.getElementById('fvalPix').value.replace(',', '.')) || 0;
+    const cartao = parseFloat(document.getElementById('fvalCartao').value.replace(',', '.')) || 0;
+    const total = din + pix + cartao;
+    document.getElementById('fdivisaTotal').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+    const totalPedido = parseFloat(document.getElementById('finalizarTotal').getAttribute('data-total'));
+    const ok = Math.abs(total - totalPedido) < 0.01 && total > 0;
+    document.getElementById('fdivisaErro').style.display = ok ? 'none' : 'block';
+    document.getElementById('btnConfirmarFinalizar').disabled = !ok;
+}
+
+document.getElementById('finalizarForm').addEventListener('submit', function() {
+    if (document.getElementById('chkDividirFinalizar').checked) {
+        const din = parseFloat(document.getElementById('fvalDinheiro').value.replace(',', '.')) || 0;
+        const pix = parseFloat(document.getElementById('fvalPix').value.replace(',', '.')) || 0;
+        const cartao = parseFloat(document.getElementById('fvalCartao').value.replace(',', '.')) || 0;
+        const pagamentos = [];
+        if (din > 0) pagamentos.push({ forma: 'dinheiro', valor: din });
+        if (pix > 0) pagamentos.push({ forma: 'pix', valor: pix });
+        if (cartao > 0) pagamentos.push({ forma: 'cartao', valor: cartao });
+        document.getElementById('finalizarPagamentosInput').value = JSON.stringify(pagamentos);
+    }
+});
+
+var formSujo = false, inputFocado = false;
+document.querySelector('#pedidoForm').addEventListener('input', function() { formSujo = true; });
+document.querySelector('#pedidoForm').addEventListener('submit', function() { formSujo = false; });
+document.addEventListener('focusin', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') inputFocado = true;
+});
+document.addEventListener('focusout', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') inputFocado = false;
+});
+setInterval(function() {
+    const modals = document.querySelectorAll('.modal');
+    let modalAberto = false;
+    modals.forEach(m => { if (m.style.display === 'flex') modalAberto = true; });
+    if (!modalAberto && !formSujo && !inputFocado) location.reload();
+}, 15000);
+</script>
+{% endblock %}

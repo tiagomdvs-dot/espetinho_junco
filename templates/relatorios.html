@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block page_title %}Relatórios{% endblock %}
+{% block content %}
+<div class="relatorios-container">
+    <div class="relatorios-filtros">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-filter"></i> Filtros</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dataInicial">Data Inicial</label>
+                        <input type="date" id="dataInicial" value="{{ data_inicial }}" onchange="carregarDados()">
+                    </div>
+                    <div class="form-group">
+                        <label for="dataFinal">Data Final</label>
+                        <input type="date" id="dataFinal" value="{{ data_final }}" onchange="carregarDados()">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top:0.5rem">
+                    <label for="turno">Turno</label>
+                    <div class="turno-btns" id="turno">
+                        <button class="filter-btn active" data-turno="todos" onclick="setTurno(this)">Todos</button>
+                        <button class="filter-btn" data-turno="almoco" onclick="setTurno(this)">Almoço (10h–16h)</button>
+                        <button class="filter-btn" data-turno="espetinho" onclick="setTurno(this)">Espetinho (19h–05h)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid" style="margin-bottom:1.5rem">
+        <div class="stat-card">
+            <div class="stat-icon faturamento">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Total Arrecadado</span>
+                <span class="stat-value" id="resumoTotal">—</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon pedidos">
+                <i class="fas fa-chair"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Pedidos Mesa</span>
+                <span class="stat-value" id="resumoMesa">—</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon alerta">
+                <i class="fas fa-motorcycle"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Pedidos Delivery</span>
+                <span class="stat-value" id="resumoDelivery">—</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon andamento">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Total Pedidos</span>
+                <span class="stat-value" id="resumoTotalPedidos">—</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-dollar-sign"></i> Vendas por Período</h3>
+            <div class="card-header-actions">
+                <a href="#" id="exportVendas" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-download"></i> CSV
+                </a>
+            </div>
+        </div>
+        <div class="card-body scrollable-body">
+            <div class="table-responsive">
+                <table class="table" id="tabelaVendas">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Data</th>
+                            <th>Hora</th>
+                            <th>Cliente</th>
+                            <th>Valor</th>
+                            <th>Pagamento</th>
+                            <th>Tipo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vendasBody">
+                        <tr><td colspan="5" class="empty-state">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-fire"></i> Produtos Mais Vendidos</h3>
+                <a href="#" id="exportProdutos" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-download"></i> CSV
+                </a>
+            </div>
+            <div class="card-body scrollable-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Quantidade</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="produtosBody">
+                            <tr><td colspan="3" class="empty-state">Carregando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-credit-card"></i> Por Forma de Pagamento</h3>
+            </div>
+            <div class="card-body">
+                <div id="pagamentoBody">
+                    <p class="empty-state">Carregando...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.turno-btns { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.turno-btns .filter-btn {
+  flex: 1; min-width: 0; padding: 0.55rem 0.4rem; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-color); background: var(--card-bg);
+  color: var(--text); font-size: 0.78rem; font-weight: 600;
+  cursor: pointer; transition: all var(--transition-fast);
+  line-height: 1.3; text-align: center; white-space: normal;
+}
+.turno-btns .filter-btn:hover {
+  border-color: var(--orange); color: var(--orange); background: var(--primary-light);
+}
+.turno-btns .filter-btn.active {
+  background: var(--orange); color: #fff; border-color: var(--orange);
+  box-shadow: 0 2px 6px rgba(244,106,31,0.3);
+}
+</style>
+<script>
+var turnoAtual = 'todos';
+
+function setTurno(el) {
+    document.querySelectorAll('.turno-btns .filter-btn').forEach(function(b) { b.classList.remove('active'); });
+    el.classList.add('active');
+    turnoAtual = el.getAttribute('data-turno');
+    carregarDados();
+}
+
+function getParams() {
+    const di = document.getElementById('dataInicial').value;
+    const df = document.getElementById('dataFinal').value;
+    return `data_inicial=${di}&data_final=${df}&turno=${turnoAtual}`;
+}
+
+function carregarDados() {
+    const params = getParams();
+
+    fetch(`/relatorios/api/resumo?${params}`)
+        .then(r => r.json())
+        .then(d => {
+            const temDados = d.total_pedidos > 0;
+            document.getElementById('resumoTotal').textContent = temDados ? `R$ ${d.total_arrecadado.toFixed(2).replace('.', ',')}` : '\u2014';
+            document.getElementById('resumoMesa').textContent = temDados ? d.total_mesa : '\u2014';
+            document.getElementById('resumoDelivery').textContent = temDados ? d.total_delivery : '\u2014';
+            document.getElementById('resumoTotalPedidos').textContent = temDados ? d.total_pedidos : '\u2014';
+        });
+
+    fetch(`/relatorios/api/vendas?${params}`)
+        .then(r => r.json())
+        .then(dados => {
+            const tbody = document.getElementById('vendasBody');
+            if (dados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhuma venda no período</td></tr>';
+            } else {
+                tbody.innerHTML = dados.map(v => {
+                    const [data, hora] = v.data.includes(' ') ? v.data.split(' ') : [v.data, ''];
+                    return `
+                    <tr>
+                        <td>#${v.id}</td>
+                        <td>${data}</td>
+                        <td>${hora}</td>
+                        <td>${v.cliente}</td>
+                        <td>R$ ${v.total.toFixed(2).replace('.', ',')}</td>
+                        <td><span class="badge badge-${v.forma}">${v.forma}</span></td>
+                        <td>${v.tipo === 'delivery' ? '<i class="fas fa-motorcycle"></i> Delivery' : '<i class="fas fa-chair"></i> Mesa'}</td>
+                    </tr>`;
+                }).join('');
+            }
+        });
+
+    fetch(`/relatorios/api/vendas-por-produto?${params}`)
+        .then(r => r.json())
+        .then(dados => {
+            const tbody = document.getElementById('produtosBody');
+            if (dados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Nenhum dado</td></tr>';
+            } else {
+                tbody.innerHTML = dados.map(p => `
+                    <tr>
+                        <td><strong>${p.nome}</strong></td>
+                        <td>${p.quantidade}</td>
+                        <td>R$ ${(p.total || 0).toFixed(2).replace('.', ',')}</td>
+                    </tr>
+                `).join('');
+            }
+        });
+
+    fetch(`/relatorios/api/vendas-por-pagamento?${params}`)
+        .then(r => r.json())
+        .then(dados => {
+            const div = document.getElementById('pagamentoBody');
+            if (dados.length === 0) {
+                div.innerHTML = '<p class="empty-state">Nenhum dado</p>';
+            } else {
+                div.innerHTML = dados.map(p => `
+                    <div class="resumo-item">
+                        <span>
+                            ${p.forma === 'dinheiro' ? '<i class="fas fa-money-bill"></i>' : ''}
+                            ${p.forma === 'pix' ? '<i class="fas fa-qrcode"></i>' : ''}
+                            ${p.forma === 'cartao' ? '<i class="fas fa-credit-card"></i>' : ''}
+                            ${!['dinheiro','pix','cartao'].includes(p.forma) ? '<i class="fas fa-receipt"></i>' : ''}
+                            ${p.forma}
+                        </span>
+                        <strong>R$ ${(p.total || 0).toFixed(2).replace('.', ',')}</strong>
+                    </div>
+                `).join('');
+            }
+        });
+
+    document.getElementById('exportVendas').href = `/relatorios/exportar/csv?tipo=vendas&${params}`;
+    document.getElementById('exportProdutos').href = `/relatorios/exportar/csv?tipo=produtos&${params}`;
+}
+
+document.addEventListener('DOMContentLoaded', carregarDados);
+</script>
+{% endblock %}

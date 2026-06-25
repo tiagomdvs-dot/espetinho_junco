@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% block page_title %}Caixa{% endblock %}
+{% block content %}
+<div class="caixa-container">
+    <div class="caixa-status-card">
+        {% if caixa and caixa.status == 'aberto' %}
+        <div class="caixa-aberto">
+            <i class="fas fa-cash-register"></i>
+            <div>
+                <h3>Caixa Aberto</h3>
+                <p>Saldo inicial: R$ {{ caixa.saldo_inicial or 0|brl }}</p>
+                <p>Aberto em: {{ caixa.data_abertura.strftime('%d/%m/%Y %H:%M') }}</p>
+            </div>
+        </div>
+        <form method="POST" action="{{ url_for('caixa.fechar') }}" class="caixa-fechar-form" onsubmit="return confirm('Fechar caixa?')">
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-lock"></i> Fechar Caixa
+            </button>
+        </form>
+        {% else %}
+        <div class="caixa-fechado">
+            <i class="fas fa-lock"></i>
+            <div>
+                <h3>Caixa Fechado</h3>
+                <p>Abra o caixa para iniciar o expediente</p>
+            </div>
+        </div>
+        <form method="POST" action="{{ url_for('caixa.abrir') }}" class="caixa-abrir-form">
+            <div class="form-group">
+                <label for="saldo_inicial">Saldo Inicial (R$)</label>
+                <input type="text" id="saldo_inicial" name="saldo_inicial" placeholder="0,00" value="0,00">
+            </div>
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-unlock"></i> Abrir Caixa
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-hand-peace"></i> Pedidos para Pagar</h3>
+            </div>
+            <div class="card-body">
+                {% for pedido in pedidos_pendentes %}
+                <div class="pedido-pendente" onclick="abrirPagamento({{ pedido.id }}, {{ pedido.total or 0 }})">
+                    <div class="pendente-info">
+                        <strong>Pedido #{{ pedido.id }}</strong>
+                        <span>
+                            {% if pedido.tipo == 'delivery' %}
+                            <i class="fas fa-truck" style="margin-right:4px;color:var(--orange)"></i>
+                            {% endif %}
+                            {{ pedido.cliente_nome or (pedido.mesa.numero|string if pedido.mesa else ('Delivery' if pedido.tipo == 'delivery' else 'Cliente')) }}
+                        </span>
+                    </div>
+                    <span class="pendente-total">R$ {{ pedido.total or 0|brl }}</span>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+                {% else %}
+                <p class="empty-state">Nenhum pedido pendente</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-check-double"></i> Pagos Hoje</h3>
+            </div>
+            <div class="card-body">
+                {% if resumo %}
+                <div class="resumo-pagamentos">
+                    {% for forma, total in resumo.items() %}
+                    <div class="resumo-item">
+                        <span>
+                            {% if forma in ('dinheiro', 'especie') %}<i class="fas fa-money-bill"></i>
+                            {% elif forma == 'pix' %}<i class="fas fa-qrcode"></i>
+                            {% elif forma in ('cartao', 'cartão') %}<i class="fas fa-credit-card"></i>
+                            {% else %}<i class="fas fa-receipt"></i>{% endif %}
+                            {{ forma|fmt_pagamento }}
+                        </span>
+                        <strong>R$ {{ total|brl }}</strong>
+                    </div>
+                    {% endfor %}
+                    <div class="resumo-total">
+                        <span>Total</span>
+                        <strong>R$ {{ (resumo.values()|sum)|brl }}</strong>
+                    </div>
+                </div>
+                {% else %}
+                <p class="empty-state">Nenhum pagamento hoje</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="pagamentoModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Receber Pagamento</h3>
+            <button class="modal-close" onclick="closeModal('pagamentoModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('caixa.pagar') }}" id="pagamentoForm">
+            <input type="hidden" name="pedido_id" id="pagamentoPedidoId">
+            <input type="hidden" name="pagamentos" id="pagamentosInput">
+            <div class="form-group">
+                <label>Valor a Pagar</label>
+                <div class="valor-destaque" id="pagamentoValor">R$ 0,00</div>
+            </div>
+
+            <div id="pgtoNormal">
+                <div class="form-group">
+                    <label for="formaPagamento">Forma de Pagamento</label>
+                    <select name="forma_pagamento" id="formaPagamento" onchange="toggleTroco()">
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="pix">PIX</option>
+                        <option value="cartao">Cartão</option>
+                    </select>
+                </div>
+                <div class="form-group" id="trocoGroup">
+                    <label>Valor Recebido (R$)</label>
+                    <input type="text" id="valorRecebido" placeholder="0,00" oninput="calcularTroco()">
+                    <small id="trocoDisplay">Troco: R$ 0,00</small>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin:0.75rem 0">
+                <label class="toggle-label">
+                    <input type="checkbox" id="chkDividir" onchange="toggleDividir()">
+                    <span class="toggle-label-text"><i class="fas fa-split"></i> Dividir pagamento</span>
+                </label>
+            </div>
+
+            <div id="pgtoDividido" style="display:none">
+                <div class="divisa-linha">
+                    <span class="divisa-icon"><i class="fas fa-money-bill"></i> Dinheiro</span>
+                    <input type="text" class="divisa-valor" id="valDinheiro" placeholder="0,00" oninput="recalcularDivisao()">
+                </div>
+                <div class="divisa-linha">
+                    <span class="divisa-icon"><i class="fas fa-qrcode"></i> PIX</span>
+                    <input type="text" class="divisa-valor" id="valPix" placeholder="0,00" oninput="recalcularDivisao()">
+                </div>
+                <div class="divisa-linha">
+                    <span class="divisa-icon"><i class="fas fa-credit-card"></i> Cartão</span>
+                    <input type="text" class="divisa-valor" id="valCartao" placeholder="0,00" oninput="recalcularDivisao()">
+                </div>
+                <div class="divisa-resumo">
+                    <span>Total distribuído:</span>
+                    <strong id="divisaTotal">R$ 0,00</strong>
+                </div>
+                <div id="divisaErro" class="divisa-erro" style="display:none">
+                    A soma deve ser igual ao valor do pedido.
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-block" id="btnConfirmarPagamento">
+                <i class="fas fa-check"></i> Confirmar Pagamento
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function abrirPagamento(pedidoId, total) {
+    document.getElementById('pagamentoPedidoId').value = pedidoId;
+    document.getElementById('pagamentoValor').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+    document.getElementById('pagamentoValor').setAttribute('data-total', total);
+    document.getElementById('valorRecebido').value = total.toFixed(2).replace('.', ',');
+    document.getElementById('trocoDisplay').textContent = 'Troco: R$ 0,00';
+    document.getElementById('chkDividir').checked = false;
+    document.getElementById('pgtoDividido').style.display = 'none';
+    document.getElementById('pgtoNormal').style.display = 'block';
+    document.getElementById('valDinheiro').value = '';
+    document.getElementById('valPix').value = '';
+    document.getElementById('valCartao').value = '';
+    document.getElementById('btnConfirmarPagamento').disabled = false;
+    toggleTroco();
+    openModal('pagamentoModal');
+}
+
+function toggleTroco() {
+    const forma = document.getElementById('formaPagamento').value;
+    document.getElementById('trocoGroup').style.display = forma === 'dinheiro' ? 'block' : 'none';
+}
+
+function calcularTroco() {
+    const total = parseFloat(document.getElementById('pagamentoValor').getAttribute('data-total'));
+    const recebido = parseFloat(document.getElementById('valorRecebido').value.replace(',', '.')) || 0;
+    const troco = recebido - total;
+    document.getElementById('trocoDisplay').textContent = 'Troco: R$ ' + (troco > 0 ? troco.toFixed(2) : '0,00').replace('.', ',');
+}
+
+function toggleDividir() {
+    const dividir = document.getElementById('chkDividir').checked;
+    document.getElementById('pgtoNormal').style.display = dividir ? 'none' : 'block';
+    document.getElementById('pgtoDividido').style.display = dividir ? 'block' : 'none';
+    if (dividir) recalcularDivisao();
+    else document.getElementById('btnConfirmarPagamento').disabled = false;
+}
+
+function recalcularDivisao() {
+    const din = parseFloat(document.getElementById('valDinheiro').value.replace(',', '.')) || 0;
+    const pix = parseFloat(document.getElementById('valPix').value.replace(',', '.')) || 0;
+    const cartao = parseFloat(document.getElementById('valCartao').value.replace(',', '.')) || 0;
+    const total = din + pix + cartao;
+    document.getElementById('divisaTotal').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+    const totalPedido = parseFloat(document.getElementById('pagamentoValor').getAttribute('data-total'));
+    const ok = Math.abs(total - totalPedido) < 0.01 && total > 0;
+    document.getElementById('divisaErro').style.display = ok ? 'none' : 'block';
+    document.getElementById('btnConfirmarPagamento').disabled = !ok;
+}
+
+document.getElementById('pagamentoForm').addEventListener('submit', function() {
+    if (document.getElementById('chkDividir').checked) {
+        const din = parseFloat(document.getElementById('valDinheiro').value.replace(',', '.')) || 0;
+        const pix = parseFloat(document.getElementById('valPix').value.replace(',', '.')) || 0;
+        const cartao = parseFloat(document.getElementById('valCartao').value.replace(',', '.')) || 0;
+        const pagamentos = [];
+        if (din > 0) pagamentos.push({ forma: 'dinheiro', valor: din });
+        if (pix > 0) pagamentos.push({ forma: 'pix', valor: pix });
+        if (cartao > 0) pagamentos.push({ forma: 'cartao', valor: cartao });
+        document.getElementById('pagamentosInput').value = JSON.stringify(pagamentos);
+    } else {
+        const forma = document.getElementById('formaPagamento').value;
+        const total = parseFloat(document.getElementById('pagamentoValor').getAttribute('data-total'));
+        document.getElementById('pagamentosInput').value = JSON.stringify([{ forma, valor: total }]);
+    }
+});
+
+function openModal(id) {
+    document.getElementById(id).style.display = 'flex';
+}
+
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+</script>
+{% endblock %}

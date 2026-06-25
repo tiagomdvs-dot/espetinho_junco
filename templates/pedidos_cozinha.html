@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block page_title %}Cozinha{% endblock %}
+{% block content %}
+<div class="cozinha-container">
+    <div class="cozinha-header">
+        <h2><i class="fas fa-fire"></i> Pedidos da Cozinha</h2>
+        <div class="cozinha-filtros">
+            <button class="btn-filter active" data-filter="em_preparo">Em Preparo</button>
+            <button class="btn-filter" data-filter="pronto">Pronto</button>
+        </div>
+    </div>
+
+    <div class="cozinha-grid" id="cozinhaGrid">
+        {% for p in pedidos %}
+        <div class="cozinha-card status-{{ p.status }}" data-status="{{ p.status }}">
+            <div class="cozinha-card-header">
+                <div class="cozinha-card-mesa">
+                    {% if p.tipo == 'mesa' and p.mesa %}
+                    <i class="fas fa-chair"></i>
+                    <span>Mesa {{ p.mesa.numero }}</span>
+                    {% elif p.tipo == 'delivery' %}
+                    <i class="fas fa-motorcycle"></i>
+                    <span>Delivery</span>
+                    {% else %}
+                    <i class="fas fa-receipt"></i>
+                    <span>Pedido #{{ p.id }}</span>
+                    {% endif %}
+                </div>
+                <div class="cozinha-card-status">
+                    {% if p.status == 'em_preparo' %}
+                    <span class="badge badge-preparo">Em Preparo</span>
+                    {% elif p.status == 'pronto' %}
+                    <span class="badge badge-pronto">Pronto</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if p.cliente_nome %}
+            <div class="cozinha-card-cliente">
+                <i class="fas fa-user"></i> {{ p.cliente_nome }}
+            </div>
+            {% endif %}
+
+            <div class="cozinha-card-tempo">
+                <i class="fas fa-clock"></i>
+                <span>{% if p.ultimo_preparo_em %}{{ p.ultimo_preparo_em.strftime('%H:%M') }}{% else %}{{ p.criado_em.strftime('%H:%M') }}{% endif %}</span>
+                <span class="tempo-decorrido" data-criado="{% if p.ultimo_preparo_em %}{{ p.ultimo_preparo_em.isoformat() }}{% else %}{{ p.criado_em.isoformat() }}{% endif %}"></span>
+            </div>
+
+            <div class="cozinha-card-itens">
+                {% for item in p.itens | sort(attribute='pronto') %}
+                {% if item.produto and (p.tipo == 'delivery' or item.produto.produzido_cozinha or (item.produto.insumo and item.produto.insumo.produzido_cozinha)) %}
+                <div class="cozinha-item {% if item.pronto %}item-feito{% endif %}">
+                    <a href="{{ url_for('pedidos.item_pronto', item_id=item.id) }}"
+                       class="item-check" title="{% if item.pronto %}Desmarcar{% else %}Marcar pronto{% endif %}">
+                        <i class="fas {% if item.pronto %}fa-check-circle{% else %}fa-circle{% endif %}"></i>
+                    </a>
+                    <span class="cozinha-item-qtd">{{ item.quantidade }}x</span>
+                    <span class="cozinha-item-nome">{{ item.produto.nome if item.produto else 'Item #' ~ item.produto_id }}</span>
+                {% if item.observacao %}
+                <span class="cozinha-item-obs">{{ item.observacao }}</span>
+                {% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            {% if p.observacao %}
+            <div class="cozinha-card-obs">
+                <i class="fas fa-comment"></i> {{ p.observacao }}
+            </div>
+            {% endif %}
+
+            <div class="cozinha-card-actions">
+                <a href="{{ url_for('pedidos.comanda', id=p.id) }}" target="_blank" class="btn btn-secondary btn-sm" title="Imprimir Comanda">
+                    <i class="fas fa-receipt"></i> Comanda
+                </a>
+                {% if p.status == 'em_preparo' %}
+                <a href="{{ url_for('pedidos.mudar_status', id=p.id, status='pronto') }}" class="btn btn-success btn-sm">
+                    <i class="fas fa-check"></i> Pronto
+                </a>
+                {% endif %}
+                {% if p.status != 'cancelado' %}
+                <a href="{{ url_for('pedidos.mudar_status', id=p.id, status='cancelado') }}" class="btn btn-danger btn-sm" onclick="return confirm('Cancelar este pedido?')">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="cozinha-vazia">
+            <i class="fas fa-check-circle"></i>
+            <p>Nenhum pedido pendente</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Start with "Em Preparo" filter active
+var filtroInicial = new URLSearchParams(window.location.search).get('filter') || 'em_preparo';
+aplicarFiltro(filtroInicial);
+document.querySelector('.btn-filter[data-filter="' + filtroInicial + '"]')?.classList.add('active');
+
+function aplicarFiltro(filtro) {
+    document.querySelectorAll('.btn-filter').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelector('.btn-filter[data-filter="' + filtro + '"]')?.classList.add('active');
+    document.querySelectorAll('.cozinha-card').forEach(function(card) {
+        card.style.display = (card.getAttribute('data-status') === filtro) ? '' : 'none';
+    });
+    atualizarTempo();
+}
+
+document.querySelectorAll('.btn-filter').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        aplicarFiltro(btn.getAttribute('data-filter'));
+    });
+});
+
+function atualizarTempo() {
+    document.querySelectorAll('.cozinha-card').forEach(function(card) {
+        var el = card.querySelector('.tempo-decorrido');
+        if (!el) return;
+        var criado = new Date(el.getAttribute('data-criado').replace(' ', 'T'));
+        var diff = Math.floor((new Date() - criado) / 1000);
+        var min = Math.floor(diff / 60);
+        if (min < 1) {
+            el.textContent = ' (agora)';
+        } else if (min < 60) {
+            el.textContent = ' (' + min + 'min)';
+        } else {
+            el.textContent = ' (' + Math.floor(min / 60) + 'h' + (min % 60) + 'min)';
+        }
+
+        var alerta = card.querySelector('.alerta-atraso');
+        if (alerta) alerta.remove();
+        card.classList.remove('card-atrasado');
+
+        var status = card.getAttribute('data-status');
+        if (min >= 30 && status === 'em_preparo') {
+            card.classList.add('card-atrasado');
+            var badge = document.createElement('div');
+            badge.className = 'alerta-atraso';
+            badge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Atrasado (' + min + 'min)';
+            card.querySelector('.cozinha-card-header').appendChild(badge);
+        }
+    });
+}
+atualizarTempo();
+setInterval(atualizarTempo, 30000);
+setInterval(function() { location.reload(); }, 30000);
+</script>
+{% endblock %}

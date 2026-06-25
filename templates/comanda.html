@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=80mm">
+    <title>Comanda #{{ pedido.id }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            color: #000;
+            width: 72mm;
+            padding: 4mm 3mm;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 4mm;
+            padding-bottom: 3mm;
+            border-bottom: 1px dashed #000;
+        }
+        .header h1 {
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .header .info {
+            font-size: 11px;
+            margin-top: 2mm;
+        }
+        .divider {
+            border-top: 1px dashed #000;
+            margin: 3mm 0;
+        }
+        .pedido-info {
+            margin-bottom: 3mm;
+        }
+        .pedido-info table {
+            width: 100%;
+            font-size: 12px;
+        }
+        .pedido-info td {
+            padding: 1mm 0;
+        }
+        .pedido-info td:last-child {
+            text-align: right;
+            font-weight: bold;
+        }
+        .itens-title {
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 2mm;
+            text-transform: uppercase;
+            text-align: center;
+        }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1.5mm 0;
+            border-bottom: 1px dotted #ccc;
+        }
+        .item-qtd { min-width: 8mm; font-weight: bold; }
+        .item-nome { flex: 1; padding: 0 1mm; }
+        .item-preco { text-align: right; white-space: nowrap; }
+        .total {
+            text-align: right;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 3mm;
+            padding-top: 2mm;
+            border-top: 2px solid #000;
+        }
+        .obs {
+            margin-top: 3mm;
+            padding: 2mm;
+            background: #f0f0f0;
+            font-style: italic;
+            font-size: 11px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 5mm;
+            padding-top: 3mm;
+            border-top: 1px dashed #000;
+            font-size: 10px;
+        }
+        @media print {
+            body { width: auto; padding: 0; }
+            .no-print { display: none; }
+        }
+        .no-print {
+            text-align: center;
+            margin-top: 10mm;
+        }
+        .no-print button {
+            padding: 8px 24px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .qrcode-pix {
+            text-align: center;
+            margin: 3mm 0;
+        }
+        .qrcode-pix img {
+            width: 60mm;
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Comanda</h1>
+        <div class="info">Pedido #{{ pedido.id }}</div>
+        <div class="info">{{ pedido.criado_em.strftime('%d/%m/%Y %H:%M') }}</div>
+    </div>
+
+    <div class="pedido-info">
+        <table>
+            <tr>
+                <td>Tipo:</td>
+                <td>{{ pedido.tipo|capitalize }}</td>
+            </tr>
+            {% if pedido.tipo == 'mesa' and pedido.mesa %}
+            <tr>
+                <td>Mesa:</td>
+                <td>{{ pedido.mesa.numero }}</td>
+            </tr>
+            {% endif %}
+            {% if pedido.cliente_nome %}
+            <tr>
+                <td>Cliente:</td>
+                <td>{{ pedido.cliente_nome }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td>Status:</td>
+                <td>{{ pedido.status|replace('_', ' ')|capitalize }}</td>
+            </tr>
+            {% if pedido.forma_pagamento %}
+            {% if pedido.forma_pagamento == 'multi' and pedido.pagamentos_parciais %}
+            <tr>
+                <td>Pagamento:</td>
+                <td>
+                    {% for pp in pedido.pagamentos_parciais %}
+                    <span style="display:inline-block;margin-right:0.5rem">{{ pp.forma_pagamento|fmt_pagamento }} R${{ pp.valor|brl }}</span>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td>Pagamento:</td>
+                <td>{{ pedido.forma_pagamento|fmt_pagamento }}</td>
+            </tr>
+            {% endif %}
+            {% endif %}
+        </table>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="itens-title">Itens</div>
+
+    {% for item in pedido.itens %}
+    <div class="item">
+        <span class="item-qtd">{{ item.quantidade }}x</span>
+        <span class="item-nome">{{ item.produto.nome if item.produto else 'Item #' ~ item.produto_id }}</span>
+        <span class="item-preco">R$ {{ item.preco_unitario * item.quantidade|brl }}</span>
+    </div>
+    {% endfor %}
+
+    <div class="total">
+        Total: R$ {{ pedido.total or 0|brl }}
+    </div>
+
+    {% if pedido.observacao %}
+    <div class="obs" style="white-space:pre-line">
+        <strong>Obs:</strong> {{ pedido.observacao }}
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        Obrigado pela preferencia!<br>
+        Espetinho Junco
+    </div>
+
+    <div class="no-print">
+        <button onclick="window.print()">Imprimir Comanda</button>
+        <br><br>
+        <button onclick="window.close()">Fechar</button>
+    </div>
+
+
+</body>
+</html>

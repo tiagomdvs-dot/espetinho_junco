@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block page_title %}Financeiro{% endblock %}
+{% block content %}
+<div class="financeiro-container">
+    <div class="mes-navegacao">
+        <a href="?mes={{ mes_ant }}&ano={{ ano_ant }}" class="mes-btn" title="Mês anterior"><i class="fas fa-chevron-left"></i></a>
+        <form method="GET" class="mes-form" id="mesForm">
+            <select name="mes" class="mes-select" onchange="document.getElementById('mesForm').submit()">
+                {% for m in range(1, 13) %}
+                <option value="{{ m }}" {{ 'selected' if m == mes }}>{{ '%02d'|format(m) }}</option>
+                {% endfor %}
+            </select>
+            <span class="mes-sep">/</span>
+            <input type="number" name="ano" class="mes-ano" value="{{ ano }}" min="2020" max="2050" onchange="document.getElementById('mesForm').submit()">
+            <noscript><button type="submit" class="mes-btn"><i class="fas fa-check"></i></button></noscript>
+        </form>
+        <a href="?mes={{ mes_prox }}&ano={{ ano_prox }}" class="mes-btn" title="Próximo mês"><i class="fas fa-chevron-right"></i></a>
+    </div>
+
+    <div class="financeiro-resumo">
+        <div class="resumo-card">
+            <span class="resumo-label">Faturamento</span>
+            <strong class="resumo-valor">R$ {{ saldo_mensal|brl }}</strong>
+        </div>
+        <div class="resumo-card despesas">
+            <span class="resumo-label">Despesas</span>
+            <strong class="resumo-valor">R$ {{ total_despesas|brl }}</strong>
+        </div>
+        <div class="resumo-card saldo-final {{ 'positivo' if saldo_final >= 0 else 'negativo' }}">
+            <span class="resumo-label">Saldo Final</span>
+            <strong class="resumo-valor">R$ {{ saldo_final|brl }}</strong>
+        </div>
+    </div>
+
+    <button class="btn btn-primary btn-block" onclick="toggleForm()" id="btnNovo">
+        <i class="fas fa-plus"></i> Nova Despesa
+    </button>
+
+    <form method="POST" action="{{ url_for('financeiro.salvar') }}" class="financeiro-form" id="financeiroForm" style="display:none">
+        <div class="form-group">
+            <label>Descrição</label>
+            <input type="text" name="descricao" required placeholder="Ex: Compra de carne">
+        </div>
+        <input type="hidden" name="tipo" value="saida">
+        <div class="form-group">
+            <label>Valor (R$)</label>
+            <input type="text" name="valor" required placeholder="0,00" inputmode="decimal">
+        </div>
+        <div class="form-group">
+            <label>Categoria</label>
+            <input type="text" name="categoria" required placeholder="Ex: energia, aluguel, salários..." list="catSuggest">
+            <datalist id="catSuggest">
+                {% for cat in categorias %}
+                <option value="{{ cat|capitalize }}">
+                {% endfor %}
+            </datalist>
+        </div>
+        <input type="hidden" name="data_lancamento" value="{{ hoje }}">
+        <div class="form-group">
+            <label>Observação <small style="color:var(--text-muted)">(opcional)</small></label>
+            <textarea name="observacao" rows="2" placeholder="Detalhes adicionais..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-success btn-block">
+            <i class="fas fa-check"></i> Registrar
+        </button>
+    </form>
+
+    <div class="financeiro-lista">
+        {% for l in lancamentos %}
+        <div class="lancamento-card">
+            <div class="lancamento-icon saida">
+                <i class="fas fa-arrow-down"></i>
+            </div>
+            <div class="lancamento-info">
+                <strong class="lancamento-desc">{{ l.descricao }}</strong>
+                <span class="lancamento-meta">
+                    {{ l.categoria|capitalize }} &middot; {{ l.data_lancamento.strftime('%d/%m/%Y') if l.data_lancamento else '' }}
+                    {% if l.usuario %}&middot; {{ l.usuario.nome }}{% endif %}
+                </span>
+                {% if l.observacao %}
+                <span class="lancamento-obs">{{ l.observacao }}</span>
+                {% endif %}
+            </div>
+            <div class="lancamento-valor saida">
+                <strong>R$ {{ l.valor|brl }}</strong>
+            </div>
+            <form method="POST" action="{{ url_for('financeiro.excluir', id=l.id) }}" class="lancamento-excluir" onsubmit="return confirm('Remover lançamento?')">
+                <button type="submit" class="btn-icon btn-danger" title="Remover">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-coins"></i>
+            <p>Nenhum lançamento financeiro</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleForm() {
+    var f = document.getElementById('financeiroForm');
+    var btn = document.getElementById('btnNovo');
+    if (f.style.display === 'none') {
+        f.style.display = 'block';
+        btn.textContent = ' Cancelar';
+        btn.className = 'btn btn-secondary btn-block';
+        btn.innerHTML = '<i class="fas fa-times"></i> Cancelar';
+    } else {
+        f.style.display = 'none';
+        btn.className = 'btn btn-primary btn-block';
+        btn.innerHTML = '<i class="fas fa-plus"></i> Novo Lançamento';
+    }
+}
+
+
+</script>
+{% endblock %}

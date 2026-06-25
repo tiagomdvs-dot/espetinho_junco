@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block page_title %}Cardápio{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-header-actions">
+        <button class="btn btn-primary" onclick="openModal('produtoModal')">
+            <i class="fas fa-plus"></i> Novo Produto
+        </button>
+        <button class="btn btn-secondary" onclick="openModal('categoriaModal')">
+            <i class="fas fa-tag"></i> Categoria
+        </button>
+    </div>
+</div>
+
+<div class="filter-tabs">
+    <button class="filter-btn active" data-filter="all">Todos</button>
+    <button class="filter-btn" data-filter="espetinho">Espetinhos</button>
+    <button class="filter-btn" data-filter="bebida">Bebidas</button>
+    <button class="filter-btn" data-filter="acompanhamento">Acompanhamentos</button>
+</div>
+
+<div class="produtos-grid">
+    {% for produto in produtos %}
+    <div class="produto-card" data-tipo="{{ produto.tipo }}">
+        <div class="produto-info">
+            <span class="produto-nome">{{ produto.nome }}</span>
+            <span class="produto-preco">R$ {{ produto.preco|brl }}</span>
+            <span class="produto-tipo">{{ produto.tipo|capitalize }}</span>
+            {% if produto.categoria %}<span class="produto-categoria">{{ produto.categoria.nome }}</span>{% endif %}
+            {% if produto.insumo %}<span class="produto-insumo"><i class="fas fa-boxes"></i> {{ produto.insumo.nome }}</span>{% endif %}
+        </div>
+        <div class="produto-actions">
+            <label class="toggle-switch {{ 'active' if produto.ativo else '' }}">
+                <a href="{{ url_for('cardapio.toggle', id=produto.id) }}" class="toggle-link">
+                    <i class="fas {{ 'fa-toggle-on text-success' if produto.ativo else 'fa-toggle-off text-muted' }}"></i>
+                </a>
+            </label>
+            <button class="btn-icon" onclick="editProduto({{ produto.id }}, '{{ produto.nome }}', {{ produto.preco }}, '{{ produto.tipo }}', '{{ produto.categoria_id or '' }}', '{{ produto.insumo_id or '' }}', '{{ produto.qtd_insumo or '' }}', {{ 'true' if produto.produzido_cozinha else 'false' }})">
+                <i class="fas fa-edit"></i>
+            </button>
+            <a href="{{ url_for('cardapio.excluir', id=produto.id) }}" class="btn-icon btn-danger" onclick="return confirm('Remover produto?')">
+                <i class="fas fa-trash"></i>
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state full-width">
+        <i class="fas fa-utensils"></i>
+        <p>Nenhum produto cadastrado</p>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="modal" id="produtoModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="produtoModalTitle">Novo Produto</h3>
+            <button class="modal-close" onclick="closeModal('produtoModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('cardapio.salvar') }}">
+            <input type="hidden" name="id" id="produtoId">
+            <div class="form-group">
+                <label for="nome">Nome do Produto</label>
+                <input type="text" id="nome" name="nome" required>
+            </div>
+            <div class="form-group">
+                <label for="preco">Preço (R$)</label>
+                <input type="text" id="preco" name="preco" placeholder="0,00" required>
+            </div>
+            <div class="form-group">
+                <label for="tipo">Tipo</label>
+                <select id="tipo" name="tipo">
+                    <option value="espetinho">Espetinho</option>
+                    <option value="bebida">Bebida</option>
+                    <option value="acompanhamento">Acompanhamento</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="categoria_id">Categoria</label>
+                <select id="categoria_id" name="categoria_id">
+                    <option value="">Sem categoria</option>
+                    {% for cat in categorias %}
+                    <option value="{{ cat.id }}">{{ cat.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="insumo_id">Insumo (controle de estoque)</label>
+                <select id="insumo_id" name="insumo_id">
+                    <option value="">Sem vínculo</option>
+                    {% for insumo in insumos %}
+                    <option value="{{ insumo.id }}">{{ insumo.nome }} ({{ insumo.unidade }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="qtd_insumo">Qtd. por unidade</label>
+                <input type="number" id="qtd_insumo" name="qtd_insumo" value="1" min="0.1" step="0.1">
+            </div>
+            <div class="form-group">
+                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;padding:0.5rem 0">
+                    <input type="checkbox" name="produzido_cozinha" id="produzido_cozinha" value="on" style="width:1.1rem;height:1.1rem;cursor:pointer">
+                    <span><i class="fas fa-utensils" style="color:var(--orange);margin-right:0.3rem"></i> Produzido na Cozinha</span>
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Salvar</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="categoriaModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Nova Categoria</h3>
+            <button class="modal-close" onclick="closeModal('categoriaModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('cardapio.salvar_categoria') }}">
+            <div class="form-group">
+                <label for="cat_nome">Nome da Categoria</label>
+                <input type="text" id="cat_nome" name="nome" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Salvar</button>
+        </form>
+    </div>
+</div>
+
+<div class="categorias-section">
+    <h3><i class="fas fa-tags"></i> Categorias</h3>
+    <div class="categorias-list">
+        {% for cat in categorias %}
+        <span class="categoria-badge">
+            {{ cat.nome }}
+            <a href="{{ url_for('cardapio.excluir_categoria', id=cat.id) }}" class="btn-icon btn-danger" style="font-size:0.6rem;margin-left:0.3rem" onclick="return confirm('Excluir categoria {{ cat.nome }}?')" title="Excluir"><i class="fas fa-times"></i></a>
+        </span>
+        {% else %}
+        <p class="empty-state">Nenhuma categoria</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editProduto(id, nome, preco, tipo, categoriaId, insumoId, qtdInsumo, produzidoCozinha) {
+    document.getElementById('produtoId').value = id;
+    document.getElementById('nome').value = nome;
+    document.getElementById('preco').value = preco.toFixed(2).replace('.', ',');
+    document.getElementById('tipo').value = tipo;
+    document.getElementById('categoria_id').value = categoriaId;
+    document.getElementById('insumo_id').value = insumoId || '';
+    document.getElementById('qtd_insumo').value = qtdInsumo || '1';
+    document.getElementById('produzido_cozinha').checked = produzidoCozinha;
+    document.getElementById('produtoModalTitle').textContent = 'Editar Produto';
+    openModal('produtoModal');
+}
+
+document.querySelector('.page-header-actions .btn-primary').addEventListener('click', function() {
+    document.getElementById('produtoId').value = '';
+    document.getElementById('nome').value = '';
+    document.getElementById('preco').value = '';
+    document.getElementById('tipo').value = 'espetinho';
+    document.getElementById('categoria_id').value = '';
+    document.getElementById('insumo_id').value = '';
+    document.getElementById('qtd_insumo').value = '1';
+    document.getElementById('produzido_cozinha').checked = false;
+    document.getElementById('produtoModalTitle').textContent = 'Novo Produto';
+});
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const filter = this.dataset.filter;
+        document.querySelectorAll('.produto-card').forEach(card => {
+            if (filter === 'all' || card.dataset.tipo === filter) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

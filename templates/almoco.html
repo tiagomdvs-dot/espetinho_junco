@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block page_title %}Almoço{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO BANNER ── -->
+<div style="
+    background: linear-gradient(135deg, #0F2818 0%, #1A4428 50%, #0F2818 100%);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+    display: flex; align-items: center; gap: 1rem;
+    position: relative; overflow: hidden;
+    box-shadow: var(--shadow-md);
+">
+    <div style="
+        position: absolute; top: -20px; right: -20px;
+        width: 100px; height: 100px; border-radius: 50%;
+        background: rgba(34,166,106,0.15);
+        pointer-events: none;
+    "></div>
+    <div style="
+        width: 52px; height: 52px; border-radius: 14px;
+        background: rgba(34,166,106,0.2);
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; font-size: 1.5rem; color: #4ADE80;
+        border: 1px solid rgba(34,166,106,0.35);
+    ">
+        <i class="fas fa-sun"></i>
+    </div>
+    <div>
+        <div style="color: #fff; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.3px;">
+            Gestão de Almoço
+        </div>
+        <div style="color: rgba(255,255,255,0.5); font-size: 0.8rem; margin-top: 0.1rem;">
+            Configure o cardápio diário e gerencie os itens
+        </div>
+    </div>
+</div>
+
+<style>
+.dias-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+@media (min-width: 500px)  { .dias-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 800px)  { .dias-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.dia-card {
+    background: var(--gray-100);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1.5px solid var(--gray-200);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.dia-card.has-data {
+    border-color: rgba(34,166,106,0.35);
+}
+.dia-card.inactive {
+    opacity: 0.55;
+    border-color: var(--gray-300);
+}
+
+.dia-header {
+    padding: 0.7rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.dia-header.segunda-sex {
+    background: linear-gradient(135deg, var(--success) 0%, #178A54 100%);
+}
+.dia-header.sabado {
+    background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+}
+.dia-header.inactive-header {
+    background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
+}
+
+.dia-body {
+    padding: 1rem;
+}
+
+.dia-textarea {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+    background: var(--card-bg);
+    color: var(--text);
+    outline: none;
+    line-height: 1.6;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+.dia-textarea:focus {
+    border-color: var(--success);
+}
+
+.dia-input-wrapper {
+    margin-top: 0.6rem;
+    position: relative;
+}
+.dia-input-wrapper .rs-prefix {
+    position: absolute;
+    left: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.85rem;
+    color: var(--text-light);
+    font-weight: 700;
+    pointer-events: none;
+}
+.dia-input-preco {
+    width: 100%;
+    padding: 0.65rem 0.8rem 0.65rem 2.2rem;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-family: inherit;
+    background: var(--card-bg);
+    color: var(--success);
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+.dia-input-preco:focus {
+    border-color: var(--success);
+}
+
+.dia-footer {
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.toggle-switch input {
+    display: none;
+}
+.toggle-track {
+    width: 44px;
+    height: 24px;
+    border-radius: 12px;
+    transition: background 0.25s;
+    position: relative;
+}
+.toggle-track.on {
+    background: var(--success);
+}
+.toggle-track.off {
+    background: #9CA3AF;
+}
+.toggle-track::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.25s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle-switch input:checked + .toggle-track::after {
+    transform: translateX(20px);
+}
+.toggle-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-light);
+    user-select: none;
+}
+</style>
+
+<!-- ════════════════════════════════════
+     SEÇÃO 1 — CARDÁPIO DA SEMANA
+════════════════════════════════════ -->
+<div class="card" style="margin-bottom: 1.25rem; border-top: 3px solid var(--success);">
+    <div class="card-header">
+        <h3><i class="fas fa-calendar-week" style="color: var(--success);"></i> Cardápio da Semana</h3>
+        <span style="
+            font-size: 0.72rem; font-weight: 700;
+            background: rgba(34,166,106,0.12); color: var(--success);
+            padding: 0.2rem 0.65rem; border-radius: 10px; letter-spacing: 0.3px;
+        ">2ª a Sáb</span>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <input type="hidden" name="action" value="salvar_cardapio">
+
+            <div class="dias-grid">
+                {% for i in range(6) %}
+                {% set is_sabado = (i == 5) %}
+                {% set reg = cardapios.get(i) %}
+                {% set is_ativo = reg.ativo if reg else true %}
+                <div class="dia-card {% if reg %}has-data{% endif %} {% if not is_ativo %}inactive{% endif %}">
+
+                    <!-- Cabeçalho -->
+                    <div class="dia-header {% if not is_ativo %}inactive-header{% elif is_sabado %}sabado{% else %}segunda-sex{% endif %}">
+                        <span style="font-weight: 800; font-size: 0.85rem; color: #fff; letter-spacing: 0.2px;">
+                            {{ dias[i] }}{% if not is_sabado %}-Feira{% endif %}
+                        </span>
+                        {% if reg %}
+                        <span style="font-size: 0.65rem; background: rgba(255,255,255,0.2); color: #fff; padding: 0.15rem 0.5rem; border-radius: 8px; font-weight: 600;">
+                            {{ "Ativo" if is_ativo else "Inativo" }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Corpo -->
+                    <div class="dia-body">
+                        <textarea name="dia_{{ i }}" rows="3" placeholder="O que vai servir hoje..." class="dia-textarea">{{ reg.descricao if reg else '' }}</textarea>
+
+                        <div class="dia-input-wrapper">
+                            <span class="rs-prefix">R$</span>
+                            <input type="text" name="preco_{{ i }}" class="dia-input-preco"
+                                value="{{ '%.2f'|format(reg.preco) if reg and reg.preco else '' }}"
+                                placeholder="0,00">
+                        </div>
+
+                        {% if reg %}
+                        <div class="dia-footer">
+                            <label class="toggle-switch">
+                                <input type="checkbox" onchange="window.location.href='{{ url_for('almoco.toggle_ativo', dia=i) }}'" {{ 'checked' if is_ativo else '' }}>
+                                <span class="toggle-track {{ 'on' if is_ativo else 'off' }}"></span>
+                                <span class="toggle-label">{{ 'ON' if is_ativo else 'OFF' }}</span>
+                            </label>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-save"></i> Salvar Cardápio da Semana
+            </button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

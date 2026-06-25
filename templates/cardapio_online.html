@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardápio Online — Espetinho Junco</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0A0F0D; color: #fff; }
+        .indisponivel { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; text-align:center; padding:2rem; }
+        .indisponivel .icon { font-size:4rem; margin-bottom:1rem; opacity:0.3; }
+        .indisponivel h2 { font-size:1.5rem; margin-bottom:0.5rem; }
+        .indisponivel p { color: rgba(255,255,255,0.5); font-size:0.95rem; }
+        .indisponivel a { display:inline-block; margin-top:1.5rem; padding:0.75rem 2rem; background: #22A66A; color:#fff; border-radius:10px; text-decoration:none; font-weight:700; }
+    </style>
+</head>
+<body>
+{% if indisponivel %}
+<div class="indisponivel">
+    <div class="icon">🕒</div>
+    <h2>Estamos Fechados</h2>
+    <p>{% if proximo_dia %}Estamos fechados hoje. Voltamos <strong>{{ proximo_dia }}</strong> às <strong>{{ proximo_horario }}</strong>! 🍢{% elif proximo_horario %}Estamos fechados no momento. Voltamos às <strong>{{ proximo_horario }}</strong>! 🍢{% else %}O cardápio online não está disponível hoje. Volte em outro dia!{% endif %}</p>
+</div>
+<div style="position:fixed;bottom:0;left:0;right:0;text-align:center;padding:0.75rem;font-size:0.78rem;color:rgba(255,255,255,0.3);">
+    Ω OmegaDev's Solutions
+</div>
+{% else %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="Peça seu delivery do Espetinho Junco online. Cardápio completo com espetinhos, porções e muito mais!">
+    <title>Cardápio Online — Espetinho Junco</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap">
+    
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        /* ── Reset & Design System ── */
+        *, *::before, *::after { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+
+        :root {
+            /* Palette: Charcoal, Flame and Embers */
+            --orange:       #FF7A30;
+            --orange-dark:  #E33E00;
+            --orange-glow:  rgba(255, 122, 48, 0.25);
+            --orange-light: rgba(255, 122, 48, 0.08);
+            --success:      #10B981;
+            --success-glow: rgba(16, 185, 129, 0.2);
+            --danger:       #EF4444;
+            --bg:           #1A1513; /* Deep warm charcoal */
+            --bg-panel:     #221D1A; /* Card / Sheet background */
+            --bg-input:     #2C2622; /* Inputs / Controls background */
+            --text:         #FAF7F5; /* Warm high-contrast text */
+            --text-sub:     #A39E9A; /* Readable subtitle text */
+            --text-muted:   #78716C; /* Low-contrast text */
+            --border:       rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(255, 122, 48, 0.2);
+            --shadow-sm:    0 2px 8px rgba(0, 0, 0, 0.4);
+            --shadow-md:    0 8px 24px rgba(0, 0, 0, 0.6);
+            --shadow-lg:    0 16px 48px rgba(0, 0, 0, 0.8);
+            --radius:       16px;
+            --radius-sm:    10px;
+            --transition:   0.24s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        html { 
+            scroll-behavior: smooth; 
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding-bottom: 110px;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            font-size: 15px;
+        }
+
+        /* ── HERO BANNER ── */
+        .hero {
+            position: relative;
+            background: linear-gradient(180deg, #1A1009 0%, #0A0807 100%);
+            padding: 2.2rem 1.2rem 3rem;
+            text-align: center;
+            overflow: hidden;
+            border-bottom: 1px solid var(--border);
+        }
+        .hero::before {
+            content: '';
+            position: absolute; 
+            inset: 0;
+            background: radial-gradient(circle at 50% 30%, rgba(255, 122, 48, 0.14), transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-logo {
+            position: relative; 
+            z-index: 1;
+            display: inline-block; 
+            margin-bottom: 1.1rem;
+        }
+        .hero-logo img {
+            width: 80px; 
+            height: 80px; 
+            border-radius: 22px;
+            object-fit: cover;
+            box-shadow: 0 8px 32px rgba(255, 122, 48, 0.35), 0 0 0 3px rgba(255, 122, 48, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.5s ease;
+        }
+        .hero-logo img:hover {
+            transform: rotate(5deg) scale(1.05);
+        }
+        .hero-logo .online-badge {
+            position: absolute; 
+            bottom: -6px; 
+            right: -6px;
+            background: var(--success); 
+            color: #fff;
+            font-size: 0.65rem; 
+            font-weight: 800;
+            padding: 3px 8px; 
+            border-radius: 20px;
+            border: 2px solid var(--bg);
+            text-transform: uppercase; 
+            letter-spacing: 0.8px;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .hero-logo .online-badge::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            background: #fff;
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+
+        .hero h1 {
+            position: relative; 
+            z-index: 1;
+            color: var(--text); 
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.7rem; 
+            font-weight: 900;
+            letter-spacing: -0.5px; 
+            margin-bottom: 0.35rem;
+        }
+        .hero p {
+            position: relative; 
+            z-index: 1;
+            color: var(--text-sub); 
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 0.4rem;
+        }
+        .hero p i {
+            color: var(--orange);
+        }
+
+        /* Info Badges Group */
+        .hero-info-badges {
+            display: inline-flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            z-index: 2;
+            position: relative;
+        }
+        .info-badge {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--text-sub);
+            font-size: 0.75rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-weight: 600;
+        }
+        .info-badge i {
+            color: var(--orange);
+            font-size: 0.8rem;
+        }
+
+        /* Track Order Button */
+        .hero-track-btn {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            margin-top: 0.75rem; padding: 0.45rem 1rem;
+            background: rgba(255,122,48,0.1);
+            border: 1px solid rgba(255,122,48,0.2);
+            border-radius: 20px;
+            color: var(--orange); font-size: 0.78rem; font-weight: 700;
+            text-decoration: none; z-index: 2; position: relative;
+            transition: var(--transition);
+        }
+        .hero-track-btn:hover {
+            background: var(--orange); color: #fff;
+            border-color: var(--orange); transform: scale(1.04);
+        }
+        .hero-track-btn:active { transform: scale(0.97); }
+
+        /* ── CONTAINER ── */
+        .container { 
+            max-width: 720px; 
+            margin: 0 auto; 
+            padding: 0 1rem; 
+        }
+
+        /* ── SEARCH BAR ── */
+        /* ── CATEGORY TABS ── */
+        .cat-tabs-wrapper {
+            position: sticky; 
+            top: 0; 
+            z-index: 99;
+            background: rgba(10, 8, 7, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 1rem;
+        }
+        .cat-tabs {
+            display: flex; 
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            padding: 0.8rem 0.2rem;
+            max-width: 720px; 
+            margin: 0 auto;
+            justify-content: center;
+        }
+
+        .cat-tab {
+            flex-shrink: 0; 
+            padding: 0.5rem 1.1rem;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: var(--bg-panel);
+            font-size: 0.82rem; 
+            font-weight: 600;
+            color: var(--text-sub); 
+            cursor: pointer;
+            transition: all var(--transition);
+            min-height: 36px; 
+            white-space: nowrap;
+            font-family: inherit; 
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .cat-tab:hover { 
+            border-color: var(--orange); 
+            color: var(--text); 
+        }
+        .cat-tab.active {
+            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%); 
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 14px var(--orange-glow);
+        }
+
+        /* ── FLASH MESSAGES ── */
+        .flash-area { 
+            padding: 0.75rem 0 0; 
+        }
+        .flash-msg {
+            padding: 0.75rem 1rem; 
+            border-radius: var(--radius-sm);
+            margin-bottom: 0.5rem; 
+            font-size: 0.875rem; 
+            font-weight: 600;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .flash-success { 
+            background: rgba(16, 185, 129, 0.1); 
+            color: var(--success); 
+            border-left: 4px solid var(--success); 
+        }
+        .flash-error { 
+            background: rgba(239, 68, 68, 0.1); 
+            color: var(--danger); 
+            border-left: 4px solid var(--danger); 
+        }
+
+        /* ── SECTION TITLE ── */
+        .cat-section { 
+            margin-bottom: 2rem; 
+            padding-top: 0.5rem; 
+        }
+        .cat-title {
+            display: flex; 
+            align-items: center; 
+            gap: 0.6rem;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem; 
+            font-weight: 800;
+            color: var(--text); 
+            margin-bottom: 1rem;
+            padding: 0.5rem 0;
+            letter-spacing: -0.2px;
+        }
+        .cat-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(255, 122, 48, 0.25) 0%, transparent 100%);
+            margin-left: 0.75rem;
+        }
+        .cat-title .cat-icon {
+            width: 30px; 
+            height: 30px; 
+            border-radius: 9px;
+            background: rgba(255, 122, 48, 0.1); 
+            color: var(--orange);
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center;
+            font-size: 0.9rem; 
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 122, 48, 0.15);
+        }
+        .cat-title.almoco-title::after { 
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.25) 0%, transparent 100%); 
+        }
+        .cat-title.almoco-title .cat-icon { 
+            background: rgba(16, 185, 129, 0.1); 
+            color: var(--success); 
+            border-color: rgba(16, 185, 129, 0.15);
+        }
+
+        /* ── PRODUCTS GRID ── */
+        .produtos-grid { 
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.75rem; 
+        }
+        @media (min-width: 680px) {
+            .produtos-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+        }
+
+        /* ── PRODUCT CARD ── */
+        .produto-card {
+            display: flex; 
+            align-items: center; 
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-panel); 
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            transition: all var(--transition);
+            position: relative; 
+            overflow: hidden;
+        }
+        .produto-card:hover { 
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md); 
+            border-color: var(--border-hover); 
+        }
+
+        /* Product Media (Images or Placeholders) */
+        .produto-media {
+            width: 76px;
+            height: 76px;
+            border-radius: 12px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: var(--bg-input);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .produto-foto {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .produto-icon-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+        }
+        .produto-icon-placeholder.espetinho {
+            background: linear-gradient(135deg, #2A140A 0%, #150A05 100%);
+            color: #FF7A30;
+            border: 1px solid rgba(255, 122, 48, 0.15);
+        }
+        .produto-icon-placeholder.bebida {
+            background: linear-gradient(135deg, #091C2C 0%, #040E16 100%);
+            color: #1AD6FD;
+            border: 1px solid rgba(26, 214, 253, 0.15);
+        }
+        .produto-icon-placeholder.acompanhamento {
+            background: linear-gradient(135deg, #2D220E 0%, #171107 100%);
+            color: #FFB800;
+            border: 1px solid rgba(255, 184, 0, 0.15);
+        }
+        .produto-icon-placeholder.almoco {
+            background: linear-gradient(135deg, #0A2416 0%, #05120B 100%);
+            color: #10B981;
+            border: 1px solid rgba(16, 185, 129, 0.15);
+        }
+
+        .produto-info { 
+            flex: 1; 
+            min-width: 0; 
+        }
+        .produto-nome {
+            font-weight: 700; 
+            font-size: 0.95rem;
+            color: var(--text); 
+            line-height: 1.35;
+        }
+        .produto-descricao {
+            font-size: 0.78rem; 
+            color: var(--text-sub);
+            margin-top: 0.25rem; 
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .produto-preco {
+            font-size: 1.1rem; 
+            font-weight: 800;
+            color: var(--orange); 
+            margin-top: 0.4rem;
+            letter-spacing: -0.2px;
+        }
+
+        /* ── ADD BUTTON ── */
+        .btn-add {
+            width: 42px; 
+            height: 42px; 
+            border-radius: 50%; 
+            border: none;
+            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+            color: #fff; 
+            font-size: 1.1rem; 
+            cursor: pointer;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px var(--orange-glow);
+            transition: all var(--transition);
+        }
+        .btn-add:hover { 
+            transform: scale(1.1); 
+            box-shadow: 0 6px 18px var(--orange-glow); 
+        }
+        .btn-add:active { 
+            transform: scale(0.92); 
+        }
+
+        /* ── QTD CONTROL ── */
+        .qtd-control {
+            display: flex; 
+            align-items: center; 
+            gap: 0.4rem; 
+            flex-shrink: 0;
+            background: var(--bg-input);
+            border-radius: 30px;
+            padding: 2px;
+            border: 1px solid var(--border);
+        }
+        .qtd-btn {
+            width: 38px; 
+            height: 38px; 
+            border-radius: 50%;
+            border: none;
+            background: transparent; 
+            color: var(--text-sub);
+            font-size: 1.1rem; 
+            font-weight: 600; 
+            cursor: pointer;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            transition: all var(--transition);
+            font-family: inherit; 
+            line-height: 1;
+        }
+        .qtd-btn:hover { 
+            background: rgba(255, 255, 255, 0.05); 
+            color: var(--text); 
+        }
+        .qtd-btn:active { 
+            transform: scale(0.9); 
+        }
+        .qtd-btn.remove-btn {
+            color: var(--danger); 
+            font-size: 0.9rem;
+        }
+        .qtd-btn.remove-btn:hover { 
+            background: rgba(239, 68, 68, 0.1); 
+        }
+        .qtd-num {
+            min-width: 28px; 
+            text-align: center;
+            font-weight: 800; 
+            font-size: 0.95rem; 
+            color: var(--text);
+        }
+
+        /* ── ALMOÇO CARD (especial) ── */
+        .almoco-card {
+            background: linear-gradient(145deg, var(--bg-panel) 0%, #151e19 100%); 
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            margin-bottom: 1rem;
+            position: relative; 
+            overflow: hidden;
+        }
+        .almoco-card::before {
+            content: '';
+            position: absolute; 
+            top: 0; 
+            left: 0;
+            width: 100%; 
+            height: 3px;
+            background: linear-gradient(90deg, var(--success) 0%, rgba(16, 185, 129, 0.3) 100%);
+        }
+        .almoco-descricao {
+            white-space: pre-line; 
+            font-size: 0.9rem; 
+            line-height: 1.6;
+            color: var(--text-sub); 
+            margin-bottom: 1.1rem;
+        }
+        .almoco-footer {
+            display: flex; 
+            align-items: center;
+            justify-content: space-between; 
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 0.85rem;
+        }
+        .almoco-preco {
+            font-weight: 800; 
+            color: var(--success); 
+            font-size: 1.15rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .almoco-preco::before {
+            content: 'Preço Individual';
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.1rem;
+        }
+
+        /* ── FLOATING CART BUTTON ── */
+        .carrinho-btn {
+            position: fixed; 
+            bottom: 1.5rem; 
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+            color: #fff; 
+            border: none; 
+            border-radius: 30px;
+            padding: 0.9rem 2rem;
+            font-size: 1rem; 
+            font-weight: 800; 
+            cursor: pointer;
+            box-shadow: 0 8px 32px var(--orange-glow), 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 200; 
+            display: flex; 
+            align-items: center; 
+            gap: 0.75rem;
+            min-height: 54px; 
+            white-space: nowrap; 
+            font-family: inherit;
+            transition: all 0.3s cubic-bezier(.4, 0, .2, 1);
+        }
+        .carrinho-btn:hover { 
+            transform: translateX(-50%) translateY(-2px); 
+            box-shadow: 0 12px 40px var(--orange-glow); 
+        }
+        .carrinho-btn:active { 
+            transform: translateX(-50%) scale(0.96); 
+        }
+        .carrinho-btn .badge {
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 12px; 
+            padding: 0.15rem 0.65rem;
+            font-size: 0.8rem; 
+            font-weight: 800;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+        .carrinho-btn.vazio {
+            opacity: 0; 
+            pointer-events: none;
+            transform: translateX(-50%) translateY(20px);
+        }
+
+        /* Bounce Animation on Add */
+        @keyframes pop {
+            0% { transform: translateX(-50%) scale(0.9); }
+            50% { transform: translateX(-50%) scale(1.08); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+        .pop-animation {
+            animation: pop 0.3s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        /* ── MODAL OVERLAY ── */
+        .modal-overlay {
+            display: none; 
+            position: fixed; 
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 500; 
+            align-items: flex-end; 
+            justify-content: center;
+        }
+        .modal-overlay.active { 
+            display: flex; 
+        }
+
+        .modal-sheet {
+            background: var(--bg-panel); 
+            width: 100%; 
+            max-height: 90vh;
+            border-radius: 24px 24px 0 0;
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column;
+            animation: sheetUp 0.32s cubic-bezier(.4, 0, .2, 1);
+            box-shadow: var(--shadow-lg);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        @keyframes sheetUp {
+            from { transform: translateY(100%); opacity: 0.7; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+
+        /* drag handle */
+        .modal-handle {
+            width: 36px; 
+            height: 4px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+            margin: 0.75rem auto 0.25rem;
+            flex-shrink: 0;
+        }
+
+        .modal-header {
+            padding: 1rem 1.25rem 1.1rem;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .modal-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem; 
+            font-weight: 800; 
+            letter-spacing: -0.2px;
+            display: flex; 
+            align-items: center; 
+            gap: 0.5rem;
+            color: var(--text);
+        }
+        .modal-header h3 i { 
+            color: var(--orange); 
+        }
+
+        .modal-close {
+            width: 36px; 
+            height: 36px;
+            background: var(--bg-input); 
+            border: none; 
+            border-radius: 50%;
+            font-size: 1rem; 
+            color: var(--text-sub);
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            transition: all var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .modal-close:hover { 
+            background: rgba(255, 255, 255, 0.08); 
+            color: var(--text); 
+        }
+
+        .modal-body { 
+            padding: 1.25rem; 
+            overflow-y: auto; 
+            flex: 1; 
+        }
+        .modal-body::-webkit-scrollbar { 
+            width: 4px; 
+        }
+        .modal-body::-webkit-scrollbar-thumb { 
+            background: rgba(255, 255, 255, 0.1); 
+            border-radius: 4px; 
+        }
+
+        /* ── CART ITEMS ── */
+        .cart-item {
+            display: flex; 
+            align-items: center; 
+            gap: 0.75rem;
+            padding: 0.85rem 0; 
+            border-bottom: 1px solid var(--border);
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn { 
+            from { opacity: 0; } 
+            to { opacity: 1; } 
+        }
+        .cart-item-info { 
+            flex: 1; 
+            min-width: 0;
+        }
+        .cart-item-nome { 
+            font-size: 0.92rem; 
+            font-weight: 600; 
+            color: var(--text);
+        }
+        .cart-item-preco { 
+            font-size: 0.82rem; 
+            color: var(--orange); 
+            font-weight: 700; 
+            margin-top: 0.15rem; 
+        }
+        .cart-item-sub { 
+            font-size: 0.78rem; 
+            color: var(--text-sub); 
+            margin-top: 0.1rem; 
+        }
+
+        .cart-item-qtd { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.3rem; 
+        }
+        .cart-item-qtd button {
+            width: 30px; 
+            height: 30px; 
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--bg-input); 
+            color: var(--text-sub); 
+            cursor: pointer;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-size: 0.9rem; 
+            transition: all var(--transition); 
+            font-family: inherit;
+        }
+        .cart-item-qtd button:hover { 
+            border-color: var(--orange); 
+            color: var(--orange); 
+        }
+        .cart-item-qtd button:active { 
+            background: var(--orange); 
+            color: #fff; 
+            border-color: var(--orange); 
+        }
+        .cart-item-qtd span {
+            min-width: 20px; 
+            text-align: center; 
+            font-weight: 800; 
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+        .cart-remove {
+            background: none; 
+            border: none; 
+            color: var(--danger);
+            cursor: pointer; 
+            width: 34px; 
+            height: 34px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            border-radius: 8px; 
+            font-size: 0.9rem; 
+            opacity: 0.7;
+            transition: all var(--transition);
+        }
+        .cart-remove:hover { 
+            background: rgba(239, 68, 68, 0.08); 
+            opacity: 1; 
+        }
+
+        .cart-total {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            padding: 1rem 0;
+            border-top: 1.5px solid var(--border);
+            margin-top: 0.5rem;
+        }
+        .cart-total span { 
+            font-size: 1rem; 
+            font-weight: 600; 
+            color: var(--text-sub);
+        }
+        .cart-total strong { 
+            color: var(--orange); 
+            font-size: 1.4rem; 
+            font-weight: 900; 
+            letter-spacing: -0.5px; 
+        }
+
+        .cart-vazio {
+            text-align: center; 
+            padding: 2.5rem 1rem; 
+            color: var(--text-muted);
+        }
+        .cart-vazio i { 
+            font-size: 2.5rem; 
+            display: block; 
+            margin-bottom: 0.75rem; 
+            opacity: 0.25; 
+        }
+        .cart-vazio p { 
+            font-size: 0.9rem; 
+            font-weight: 600; 
+        }
+
+        /* ── CHECKOUT FORM ── */
+        .checkout-section { 
+            margin-top: 1.25rem; 
+        }
+        .checkout-divider {
+            display: flex; 
+            align-items: center; 
+            gap: 0.75rem;
+            margin: 1.25rem 0 1rem;
+        }
+        .checkout-divider span { 
+            font-size: 0.8rem; 
+            font-weight: 800; 
+            color: var(--text-sub); 
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            white-space: nowrap; 
+        }
+        .checkout-divider::before, .checkout-divider::after {
+            content: ''; 
+            flex: 1; 
+            height: 1px; 
+            background: var(--border);
+        }
+
+        .checkout-form { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 0.85rem; 
+        }
+        .checkout-form input,
+        .checkout-form textarea,
+        .checkout-form select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.92rem; 
+            font-family: inherit;
+            min-height: 48px; 
+            background: var(--bg-input);
+            color: var(--text); 
+            outline: none;
+            transition: all var(--transition);
+        }
+        .checkout-form input:focus,
+        .checkout-form textarea:focus,
+        .checkout-form select:focus {
+            border-color: var(--orange);
+            box-shadow: 0 0 0 3px rgba(255, 122, 48, 0.15);
+        }
+        .checkout-form input::placeholder,
+        .checkout-form textarea::placeholder { 
+            color: var(--text-muted); 
+        }
+        .checkout-form textarea { 
+            min-height: 72px; 
+            resize: vertical; 
+        }
+
+        .form-label {
+            font-size: 0.82rem; 
+            font-weight: 700; 
+            color: var(--text-sub);
+            display: block; 
+            margin-bottom: 0.4rem; 
+            letter-spacing: 0.2px;
+        }
+
+        /* Payment Radio Buttons */
+        .pagamento-options { 
+            display: flex; 
+            gap: 0.5rem; 
+        }
+        .pagamento-option {
+            flex: 1; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            gap: 0.4rem;
+            padding: 0.85rem 0.5rem;
+            border: 1px solid var(--border); 
+            border-radius: var(--radius-sm);
+            cursor: pointer; 
+            text-align: center; 
+            background: var(--bg-input);
+            transition: all var(--transition); 
+            font-family: inherit;
+        }
+        .pagamento-option input { 
+            display: none; 
+        }
+        .pagamento-option i { 
+            font-size: 1.3rem; 
+            color: var(--text-muted); 
+            transition: color var(--transition); 
+        }
+        .pagamento-option span { 
+            font-size: 0.78rem; 
+            font-weight: 600; 
+            color: var(--text-sub); 
+            transition: color var(--transition); 
+        }
+        .pagamento-option:hover { 
+            border-color: rgba(255, 122, 48, 0.3); 
+        }
+        .pagamento-option:has(input:checked) {
+            border-color: var(--orange);
+            background: var(--orange-light);
+            box-shadow: 0 0 0 3px rgba(255, 122, 48, 0.1);
+        }
+        .pagamento-option:has(input:checked) i { 
+            color: var(--orange); 
+        }
+        .pagamento-option:has(input:checked) span { 
+            color: var(--orange); 
+            font-weight: 700; 
+        }
+
+        .troco-group { 
+            display: none; 
+            animation: fadeIn 0.2s ease;
+        }
+        .troco-hint { 
+            font-size: 0.75rem; 
+            color: var(--text-muted); 
+            margin-top: -0.25rem; 
+        }
+
+        /* Submit Button */
+        .btn-submit {
+            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+            color: #fff; 
+            border: none; 
+            border-radius: var(--radius-sm);
+            padding: 0.95rem; 
+            font-size: 1rem; 
+            font-weight: 800;
+            cursor: pointer; 
+            min-height: 52px;
+            box-shadow: 0 4px 16px var(--orange-glow);
+            transition: all var(--transition); 
+            font-family: inherit;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 0.6rem;
+            width: 100%; 
+            letter-spacing: 0.2px;
+        }
+        .btn-submit:hover { 
+            box-shadow: 0 6px 24px var(--orange-glow); 
+            transform: translateY(-1px); 
+        }
+        .btn-submit:active { 
+            transform: translateY(0) scale(0.98); 
+        }
+        .btn-submit:disabled { 
+            opacity: 0.45; 
+            cursor: not-allowed; 
+            transform: none; 
+            box-shadow: none; 
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            text-align: center; 
+            padding: 4rem 1.5rem; 
+            color: var(--text-sub);
+        }
+        .empty-state i { 
+            font-size: 2.8rem; 
+            display: block; 
+            margin-bottom: 0.85rem; 
+            opacity: 0.25; 
+        }
+        .empty-state p { 
+            font-size: 0.95rem; 
+            font-weight: 600; 
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (min-width: 600px) {
+            .container { padding: 0 1.5rem; }
+            .modal-overlay { align-items: center; padding: 1rem; }
+            .modal-sheet {
+                max-width: 500px; 
+                border-radius: 24px;
+                animation: modalIn 0.28s cubic-bezier(.4, 0, .2, 1);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+            }
+            @keyframes modalIn {
+                from { opacity: 0; transform: scale(0.94) translateY(8px); }
+                to   { opacity: 1; transform: scale(1)    translateY(0); }
+            }
+            .modal-handle { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── HERO BANNER ── -->
+    <div class="hero">
+        <div class="hero-logo">
+            <img src="{{ url_for('static', filename='junco_espetinho.png') }}" alt="Espetinho Junco">
+            <span class="online-badge">Aberto</span>
+        </div>
+        <h1>Espetinho Junco</h1>
+        <p><i class="fa-solid fa-fire"></i> O autêntico churrasco na brasa</p>
+        
+        <!-- App info badges -->
+        <div class="hero-info-badges">
+            <span class="info-badge"><i class="fa-solid fa-star"></i> 4.9 (200+)</span>
+            <span class="info-badge"><i class="fa-solid fa-clock"></i> 30-50 min</span>
+            <span class="info-badge"><i class="fa-solid fa-truck"></i> Entrega</span>
+        </div>
+
+        <!-- Track order button -->
+        <a href="{{ url_for('cardapio.consultar_pedido') }}" class="hero-track-btn">
+            <i class="fa-solid fa-receipt"></i> Verificar Pedido
+        </a>
+    </div>
+
+    <!-- ── CATEGORY TABS ── -->
+    <div class="cat-tabs-wrapper">
+        <div class="cat-tabs" id="catTabs">
+            {% if almoco_hoje or almoco_produtos %}
+            <button class="cat-tab" data-cat="almoco">
+                <i class="fas fa-sun"></i> Almoço
+            </button>
+            {% endif %}
+            {% for cat in categorias %}
+            <button class="cat-tab" data-cat="cat-{{ cat.id }}">{{ cat.nome }}</button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ── MAIN CONTENT ── -->
+    <div class="container">
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-area">
+            {% for category, message in messages %}
+            <div class="flash-msg flash-{{ category }}">
+                <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- ALMOÇO SECTION -->
+        {% if almoco_hoje or almoco_produtos %}
+        <div class="cat-section" data-categoria="almoco" style="display:none">
+            <div class="cat-title almoco-title">
+                <span class="cat-icon"><i class="fas fa-sun"></i></span>
+                Almoço{% if almoco_hoje %} — {{ almoco_hoje.dia }}{% if almoco_hoje.dia in ('Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta') %}-Feira{% endif %}{% endif %}
+            </div>
+
+            {% if almoco_hoje %}
+            <div class="almoco-card">
+                <div class="almoco-descricao">{{ almoco_hoje.descricao }}</div>
+                <div class="almoco-footer">
+                    {% if almoco_hoje.preco %}
+                    <span class="almoco-preco">R$ {{ almoco_hoje.preco|brl }}</span>
+                    {% endif %}
+                    <div class="qtd-control" id="qtd-almoco" style="display:none">
+                        <button class="qtd-btn remove-btn" onclick="removeItem('almoco')" title="Remover">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="qtd-btn" onclick="changeQtd('almoco', -1)">−</button>
+                        <span class="qtd-num" id="qtd-val-almoco">1</span>
+                        <button class="qtd-btn" onclick="changeQtd('almoco', 1)">+</button>
+                    </div>
+                    <button class="btn-add" id="btn-add-almoco"
+                        onclick="addItem('almoco', 'Almoço - {{ almoco_hoje.dia }}{% if almoco_hoje.dia in ('Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta') %}-Feira{% endif %}', {{ almoco_hoje.preco or 0 }})"
+                        title="Adicionar ao pedido">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if almoco_produtos %}
+            <div class="produtos-grid">
+                {% for p in almoco_produtos %}
+                <div class="produto-card" data-id="{{ p.id }}">
+                    <div class="produto-media">
+                        {% if p.foto %}
+                        <img src="{{ url_for('static', filename='uploads/' + p.foto) if '/' not in p.foto else p.foto }}" alt="{{ p.nome }}" class="produto-foto" loading="lazy">
+                        {% else %}
+                        <div class="produto-icon-placeholder almoco">
+                            <i class="fa-solid fa-bowl-rice"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="produto-info">
+                        <div class="produto-nome">{{ p.nome }}</div>
+                        <div class="produto-preco">R$ {{ p.preco|brl }}</div>
+                    </div>
+                    <div class="qtd-control" id="qtd-{{ p.id }}" style="display:none">
+                        <button class="qtd-btn remove-btn" onclick="removeItem({{ p.id }})" title="Remover">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="qtd-btn" onclick="changeQtd({{ p.id }}, -1)">−</button>
+                        <span class="qtd-num" id="qtd-val-{{ p.id }}">1</span>
+                        <button class="qtd-btn" onclick="changeQtd({{ p.id }}, 1)">+</button>
+                    </div>
+                    <button class="btn-add" id="btn-add-{{ p.id }}"
+                        onclick="addItem({{ p.id }}, '{{ p.nome|replace("'", "\\'") }}', {{ p.preco }})">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- CATEGORIAS SECTION -->
+        {% for cat in categorias %}
+        {% set cat_produtos = produtos|selectattr('categoria_id', 'equalto', cat.id)|list %}
+        {% if cat_produtos %}
+        <div class="cat-section" data-categoria="cat-{{ cat.id }}">
+            <div class="cat-title">
+                <span class="cat-icon"><i class="fas fa-tag"></i></span>
+                {{ cat.nome }}
+            </div>
+            <div class="produtos-grid">
+                {% for p in cat_produtos %}
+                <div class="produto-card" data-id="{{ p.id }}">
+                    <div class="produto-media">
+                        {% if p.foto %}
+                        <img src="{{ url_for('static', filename='uploads/' + p.foto) if '/' not in p.foto else p.foto }}" alt="{{ p.nome }}" class="produto-foto" loading="lazy">
+                        {% else %}
+                        <div class="produto-icon-placeholder {{ p.tipo }}">
+                            {% if p.tipo == 'espetinho' %}
+                            <i class="fa-solid fa-fire"></i>
+                            {% elif p.tipo == 'bebida' %}
+                            <i class="fa-solid fa-beer-mug-empty"></i>
+                            {% elif p.tipo == 'acompanhamento' %}
+                            <i class="fa-solid fa-bowl-rice"></i>
+                            {% else %}
+                            <i class="fa-solid fa-utensils"></i>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="produto-info">
+                        <div class="produto-nome">{{ p.nome }}</div>
+                        {% if p.descricao %}<div class="produto-descricao">{{ p.descricao }}</div>{% endif %}
+                        <div class="produto-preco">R$ {{ p.preco|brl }}</div>
+                    </div>
+                    <div class="qtd-control" id="qtd-{{ p.id }}" style="display:none">
+                        <button class="qtd-btn remove-btn" onclick="removeItem({{ p.id }})" title="Remover">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="qtd-btn" onclick="changeQtd({{ p.id }}, -1)">−</button>
+                        <span class="qtd-num" id="qtd-val-{{ p.id }}">1</span>
+                        <button class="qtd-btn" onclick="changeQtd({{ p.id }}, 1)">+</button>
+                    </div>
+                    <button class="btn-add" id="btn-add-{{ p.id }}"
+                        onclick="addItem({{ p.id }}, '{{ p.nome|replace("'", "\\'") }}', {{ p.preco }})">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+
+        {% if not categorias and not almoco_hoje and not almoco_produtos %}
+        <div class="empty-state">
+            <i class="fas fa-utensils"></i>
+            <p>Cardápio indisponível no momento</p>
+        </div>
+        {% endif %}
+
+    </div><!-- /container -->
+
+    <!-- ── FLOATING CART BUTTON ── -->
+    <button class="carrinho-btn vazio" id="carrinhoBtn" onclick="openCarrinho()">
+        <i class="fas fa-shopping-bag"></i>
+        <span>Ver Pedido</span>
+        <span class="badge" id="carrinhoCount">0</span>
+    </button>
+
+    <!-- ── CART MODAL ── -->
+    <div class="modal-overlay" id="carrinhoModal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3><i class="fas fa-shopping-bag"></i> Meu Pedido</h3>
+                <button class="modal-close" onclick="closeCarrinho()" aria-label="Fechar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="cartItens"></div>
+                <div class="cart-total">
+                    <span>Total</span>
+                    <strong id="cartTotal">R$ 0,00</strong>
+                </div>
+
+                <!-- CHECKOUT FORM -->
+                <div class="checkout-section" id="checkoutSection" style="display:none">
+                    <div class="checkout-divider"><span>Dados para entrega</span></div>
+                    <form class="checkout-form" method="POST" action="{{ url_for('cardapio.pedir_online') }}" id="pedidoForm">
+                        <input type="hidden" name="itens" id="itensInput" value="[]">
+                        
+                        <input type="text" name="cliente_nome" placeholder="Seu nome completo" required>
+                        <input type="tel" name="telefone" placeholder="WhatsApp (DDD + número)" required maxlength="11" pattern="[0-9]{11}" inputmode="numeric">
+                        <textarea name="endereco" placeholder="Endereço de entrega (rua, número, bairro, referências)" required></textarea>
+
+                        <div>
+                            <label class="form-label">Forma de Pagamento</label>
+                            <div class="pagamento-options">
+                                <label class="pagamento-option">
+                                    <input type="radio" name="forma_pagamento" value="dinheiro" checked onchange="toggleTroco()">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    <span>Dinheiro</span>
+                                </label>
+                                <label class="pagamento-option">
+                                    <input type="radio" name="forma_pagamento" value="pix" onchange="toggleTroco()">
+                                    <i class="fas fa-qrcode"></i>
+                                    <span>PIX</span>
+                                </label>
+                                <label class="pagamento-option">
+                                    <input type="radio" name="forma_pagamento" value="cartao" onchange="toggleTroco()">
+                                    <i class="fas fa-credit-card"></i>
+                                    <span>Cartão</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="troco-group" id="trocoGroup">
+                            <input type="text" name="troco" placeholder="Valor que vai pagar (ex: 50,00)" inputmode="decimal">
+                            <p class="troco-hint">Precisa de troco? Informe o valor total que vai entregar</p>
+                        </div>
+
+                        <textarea name="observacao" placeholder="Alguma observação do pedido? (ex: retirar cebola, ponto da carne...)"></textarea>
+
+                        <button type="submit" class="btn-submit" id="btnPedir" disabled>
+                            <i class="fas fa-paper-plane"></i> Enviar Pedido
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let carrinho = {};
+
+    /* ── Cart Logic ── */
+    function addItem(id, nome, preco) {
+        if (carrinho[id]) {
+            carrinho[id].quantidade += 1;
+        } else {
+            carrinho[id] = { produto_id: id, nome, preco, quantidade: 1 };
+        }
+        render();
+        
+        // Micro bounce effect on add button
+        const btn = document.getElementById('btn-add-' + id);
+        if (btn) {
+            btn.style.transform = 'scale(1.25)';
+            setTimeout(() => btn.style.transform = '', 180);
+        }
+    }
+
+    function removeItem(id) {
+        delete carrinho[id];
+        render();
+        if (document.getElementById('carrinhoModal').classList.contains('active')) {
+            renderCartModal();
+        }
+    }
+
+    function changeQtd(id, delta) {
+        if (!carrinho[id]) return;
+        const newVal = carrinho[id].quantidade + delta;
+        if (newVal < 1) { 
+            removeItem(id); 
+            return; 
+        }
+        carrinho[id].quantidade = newVal;
+        render();
+        if (document.getElementById('carrinhoModal').classList.contains('active')) {
+            renderCartModal();
+        }
+    }
+
+    function render() {
+        const items  = Object.values(carrinho);
+        const count  = items.reduce((s, i) => s + i.quantidade, 0);
+        const btn    = document.getElementById('carrinhoBtn');
+        const badge  = document.getElementById('carrinhoCount');
+        const input  = document.getElementById('itensInput');
+
+        const wasEmpty = btn.classList.contains('vazio');
+        
+        badge.textContent = count;
+        btn.classList.toggle('vazio', count === 0);
+        input.value = JSON.stringify(items.map(i => ({ produto_id: i.produto_id, quantidade: i.quantidade })));
+
+        // Animate floating cart entry
+        if (count > 0 && wasEmpty) {
+            btn.classList.add('pop-animation');
+            setTimeout(() => btn.classList.remove('pop-animation'), 300);
+        }
+
+        // Sync card controls
+        const idsNoCarrinho = new Set(items.map(i => i.produto_id));
+        document.querySelectorAll('.produto-card').forEach(card => {
+            const id = parseInt(card.dataset.id);
+            if (isNaN(id)) return;
+            
+            const btnAdd  = document.getElementById('btn-add-' + id);
+            const qtdCtrl = document.getElementById('qtd-' + id);
+            const valEl   = document.getElementById('qtd-val-' + id);
+            if (idsNoCarrinho.has(id)) {
+                if (btnAdd)  btnAdd.style.display  = 'none';
+                if (qtdCtrl) qtdCtrl.style.display = 'flex';
+                if (valEl && carrinho[id]) valEl.textContent = carrinho[id].quantidade;
+            } else {
+                if (btnAdd)  btnAdd.style.display  = 'flex';
+                if (qtdCtrl) qtdCtrl.style.display = 'none';
+            }
+        });
+
+        // Sync Almoço controls
+        const almocoIn  = idsNoCarrinho.has('almoco');
+        const aBtnAdd   = document.getElementById('btn-add-almoco');
+        const aQtd      = document.getElementById('qtd-almoco');
+        const aVal      = document.getElementById('qtd-val-almoco');
+        if (almocoIn) {
+            if (aBtnAdd) aBtnAdd.style.display = 'none';
+            if (aQtd)    aQtd.style.display    = 'flex';
+            if (aVal && carrinho['almoco']) aVal.textContent = carrinho['almoco'].quantidade;
+        } else {
+            if (aBtnAdd) aBtnAdd.style.display = 'flex';
+            if (aQtd)    aQtd.style.display    = 'none';
+        }
+    }
+
+    function renderCartModal() {
+        const items     = Object.values(carrinho);
+        const container = document.getElementById('cartItens');
+        const totalEl   = document.getElementById('cartTotal');
+        const btnPedir  = document.getElementById('btnPedir');
+        const checkout  = document.getElementById('checkoutSection');
+
+        if (items.length === 0) {
+            container.innerHTML = `
+                <div class="cart-vazio">
+                    <i class="fas fa-shopping-bag"></i>
+                    <p>Seu carrinho está vazio</p>
+                </div>`;
+            totalEl.textContent = 'R$ 0,00';
+            btnPedir.disabled   = true;
+            if (checkout) checkout.style.display = 'none';
+        } else {
+            let html = '';
+            let total = 0;
+            items.forEach(i => {
+                const sub = i.preco * i.quantidade;
+                total += sub;
+                html += `
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <div class="cart-item-nome">${i.nome}</div>
+                        <div class="cart-item-preco">R$ ${i.preco.toFixed(2).replace('.',',')}</div>
+                        <div class="cart-item-sub">Subtotal: R$ ${sub.toFixed(2).replace('.',',')}</div>
+                    </div>
+                    <div class="cart-item-qtd">
+                        <button onclick="changeQtd('${i.produto_id}', -1)">−</button>
+                        <span>${i.quantidade}</span>
+                        <button onclick="changeQtd('${i.produto_id}', 1)">+</button>
+                    </div>
+                    <button class="cart-remove" onclick="removeItem('${i.produto_id}')" title="Remover">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>`;
+            });
+            container.innerHTML = html;
+            totalEl.textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+            btnPedir.disabled   = false;
+            if (checkout) checkout.style.display = 'block';
+        }
+    }
+
+    function openCarrinho() {
+        renderCartModal();
+        document.getElementById('carrinhoModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeCarrinho() {
+        document.getElementById('carrinhoModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function toggleTroco() {
+        const pag = document.querySelector('input[name="forma_pagamento"]:checked');
+        const trocoGroup = document.getElementById('trocoGroup');
+        if (trocoGroup) {
+            trocoGroup.style.display = pag && pag.value === 'dinheiro' ? 'block' : 'none';
+        }
+    }
+    toggleTroco();
+
+    /* Close modal on click backdrop */
+    document.getElementById('carrinhoModal').addEventListener('click', function(e) {
+        if (e.target === this) closeCarrinho();
+    });
+    /* Close on ESC */
+    document.addEventListener('keydown', e => { 
+        if (e.key === 'Escape') closeCarrinho(); 
+    });
+
+    /* ── Category tabs ── */
+    const allSections = document.querySelectorAll('.cat-section');
+    const allTabs     = document.querySelectorAll('.cat-tab');
+
+    function showCategory(cat) {
+        allSections.forEach(s => {
+            s.style.display = (s.dataset.categoria === cat) ? 'block' : 'none';
+        });
+        allTabs.forEach(t => t.classList.toggle('active', t.dataset.cat === cat));
+    }
+
+    allTabs.forEach(tab => {
+        tab.addEventListener('click', () => showCategory(tab.dataset.cat));
+    });
+
+    /* ── Form Double-submission Prevention ── */
+    document.getElementById('pedidoForm').addEventListener('submit', function(e) {
+        const btn = document.getElementById('btnPedir');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando Pedido...';
+        }
+    });
+
+    // Initial: show first available category tab
+    const firstTab = document.querySelector('.cat-tab:not([data-cat="almoco"])') ||
+                     document.querySelector('.cat-tab');
+    if (firstTab) {
+        showCategory(firstTab.dataset.cat);
+    }
+    </script>
+</body>
+</html>
+<div style="text-align:center;padding:1rem;font-size:0.72rem;color:var(--text-muted);opacity:0.5;">
+    Ω OmegaDev's Solutions
+</div>
+{% endif %}
