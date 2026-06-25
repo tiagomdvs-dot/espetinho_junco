@@ -21,6 +21,14 @@ if database_url and database_url.startswith('postgresql://'):
     try:
         import pg8000
         database_url = database_url.replace('postgresql://', 'postgresql+pg8000://', 1)
+        from urllib.parse import urlparse, urlencode, parse_qs
+
+        parsed = urlparse(database_url)
+        qs = parse_qs(parsed.query)
+        qs.pop('sslmode', None)
+        qs.pop('pgbouncer', None)
+        clean_query = urlencode(qs, doseq=True)
+        database_url = database_url.replace(parsed.query, clean_query)
     except ImportError:
         pass
 if not database_url:
@@ -36,7 +44,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
     'pool_recycle': 300,
-    'connect_args': {'connect_timeout': 10},
 }
 
 db.init_app(app)
