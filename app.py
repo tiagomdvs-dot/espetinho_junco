@@ -3,6 +3,7 @@ import sys
 import traceback
 import json
 import tempfile
+from urllib.parse import urlparse, urlencode, parse_qs
 from flask import Flask, jsonify
 from flask_login import LoginManager
 from models import db, User, Produto, Pedido, PagamentoParcial
@@ -16,20 +17,25 @@ if os.environ.get('VERCEL'):
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'espetinho-junco-secret-key-2024')
 
-database_url = os.environ.get('DATABASE_URL')
+def _clean_pg_url(url):
+    url = url.replace('postgresql://', 'postgresql+pg8000://', 1)
+    url = url.replace('postgres://', 'postgresql+pg8000://', 1)
+    parsed = urlparse(url)
+    qs = parse_qs(parsed.query)
+    qs.pop('sslmode', None)
+    qs.pop('pgbouncer', None)
+    clean_query = urlencode(qs, doseq=True)
+    base = url.rstrip('?').split('?')[0]
+    return f'{base}?{clean_query}' if clean_query else base
+
+database_url = (
+    os.environ.get('DATABASE_URL')
+    or os.environ.get('POSTGRES_URL_NON_POOLING')
+)
 if database_url and database_url.startswith('postgresql://'):
     try:
         import pg8000
-        database_url = database_url.replace('postgresql://', 'postgresql+pg8000://', 1)
-        from urllib.parse import urlparse, urlencode, parse_qs
-
-        parsed = urlparse(database_url)
-        qs = parse_qs(parsed.query)
-        qs.pop('sslmode', None)
-        qs.pop('pgbouncer', None)
-        clean_query = urlencode(qs, doseq=True)
-        base = database_url.rstrip('?').split('?')[0]
-        database_url = f'{base}?{clean_query}' if clean_query else base
+        database_url = _clean_pg_url(database_url)
     except ImportError:
         pass
 if not database_url:
