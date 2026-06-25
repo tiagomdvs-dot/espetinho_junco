@@ -523,15 +523,17 @@ img { max-width: 100%; display: block; }
    FILTER TABS (Pill buttons)
 ══════════════════════════════════════════════ */
 .filter-tabs {
-  display: flex; gap: 0.4rem; margin-bottom: 1rem;
-  overflow-x: auto; -webkit-overflow-scrolling: touch;
-  padding-bottom: 0.25rem; scrollbar-width: none;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.35rem; margin-bottom: 1rem;
 }
-.filter-tabs::-webkit-scrollbar { display: none; }
+@media (min-width: 540px) {
+  .filter-tabs { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 769px) {
+  .filter-tabs { grid-template-columns: repeat(6, 1fr); }
+}
 
 .filter-btn {
-  flex-shrink: 0;
-  padding: 0.45rem 1rem;
+  padding: 0.4rem 0.5rem;
   background: var(--card-bg);
   border: 1.5px solid var(--gray-200);
   border-radius: 20px;
