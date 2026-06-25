@@ -16,8 +16,8 @@
             <div class="cozinha-card-header">
                 <div class="cozinha-card-mesa">
                     {% if p.tipo == 'mesa' and p.mesa %}
-                    <i class="fas fa-chair"></i>
-                    <span>Mesa {{ p.mesa.numero }}</span>
+                    <i class="fas {% if p.mesa.numero == 0 %}fa-store{% else %}fa-chair{% endif %}"></i>
+                    <span>{% if p.mesa.numero == 0 %}Balcão{% else %}Mesa {{ p.mesa.numero }}{% endif %}</span>
                     {% elif p.tipo == 'delivery' %}
                     <i class="fas fa-motorcycle"></i>
                     <span>Delivery</span>

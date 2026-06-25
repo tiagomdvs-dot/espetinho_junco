@@ -31,7 +31,7 @@
         <div class="pedido-body">
             <div class="pedido-cliente">
                 <i class="fas fa-user"></i>
-                {{ pedido.cliente_nome or ('Mesa ' ~ pedido.mesa.numero if pedido.mesa else 'Cliente') }}
+                {{ pedido.cliente_nome or ('Balcão' if pedido.mesa and pedido.mesa.numero == 0 else 'Mesa ' ~ pedido.mesa.numero if pedido.mesa else 'Cliente') }}
             </div>
             <div class="pedido-info-row">
                 <span>{% if pedido.tipo == 'mesa' %}<i class="fas fa-chair"></i>{% else %}<i class="fas fa-motorcycle"></i>{% endif %} {{ pedido.tipo|capitalize }}</span>

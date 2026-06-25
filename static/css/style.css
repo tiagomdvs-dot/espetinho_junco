@@ -1293,6 +1293,9 @@ img { max-width: 100%; display: block; }
 .mesa-badge small { font-size: 0.62rem; font-weight: 500; }
 .mesa-badge.livre   { background: var(--success); color: #fff; opacity: 0.65; }
 .mesa-badge.ocupada { background: var(--danger);  color: #fff; }
+.mesa-badge.balcao { min-width: 70px; background: var(--info); }
+.mesa-badge.balcao.livre { opacity: 0.65; }
+.mesa-badge.balcao i { font-size: 0.85rem; }
 
 .produto-item-card.sem-receita        { border-color: var(--danger); border-style: dashed; }
 .produto-item-card.estoque-insuficiente { border-color: var(--warning); }

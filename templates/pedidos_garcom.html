@@ -20,7 +20,7 @@
                     <option value="">Selecione a mesa</option>
                     {% for mesa in mesas %}
                     <option value="{{ mesa.id }}" {% if mesa.id in mesas_ocupadas %}disabled{% endif %}>
-                        Mesa {{ mesa.numero }}{% if mesa.id in mesas_ocupadas %} (Ocupada){% endif %}
+                        {% if mesa.numero == 0 %}Balcão{% else %}Mesa {{ mesa.numero }}{% endif %}{% if mesa.id in mesas_ocupadas %} (Ocupada){% endif %}
                     </option>
                     {% endfor %}
                 </select>
@@ -111,9 +111,9 @@
             <h3><i class="fas fa-chair"></i> Mesas</h3>
             <div class="mesas-grid">
                 {% for mesa in mesas %}
-                <span class="mesa-badge {% if mesa.id in mesas_ocupadas %}ocupada{% else %}livre{% endif %}">
-                    {{ mesa.numero }}
-                    <small>{% if mesa.id in mesas_ocupadas %}Ocupada{% else %}Livre{% endif %}</small>
+                <span class="mesa-badge {% if mesa.numero == 0 %}balcao{% endif %} {% if mesa.id in mesas_ocupadas %}ocupada{% else %}livre{% endif %}">
+                    {% if mesa.numero == 0 %}<i class="fas fa-store"></i> B{% else %}{{ mesa.numero }}{% endif %}
+                    <small>{% if mesa.id in mesas_ocupadas %}Ocupado{% else %}Livre{% endif %}</small>
                 </span>
                 {% endfor %}
             </div>
@@ -126,7 +126,7 @@
         </div>
         <div class="garcom-orders-list">
             {% for pedido in pedidos_abertos %}
-            <div class="order-mini-card status-{{ pedido.status }}" data-mesa="{{ pedido.mesa.numero if pedido.mesa else '' }}" data-cliente="{{ pedido.cliente_nome or '' }}">
+            <div class="order-mini-card status-{{ pedido.status }}" data-mesa="{% if pedido.mesa %}{% if pedido.mesa.numero == 0 %}Balcão{% else %}{{ pedido.mesa.numero }}{% endif %}{% endif %}" data-cliente="{{ pedido.cliente_nome or '' }}">
                 <div class="order-mini-header">
                     <strong>Pedido #{{ pedido.id }}</strong>
                     <span class="status-badge status-{{ pedido.status }}">
@@ -137,9 +137,9 @@
                     </span>
                 </div>
                 <div class="order-mini-body">
-                    <span><i class="fas fa-user"></i> {{ pedido.cliente_nome or 'Mesa ' + (pedido.mesa.numero|string if pedido.mesa else '') }}</span>
+                    <span><i class="fas fa-user"></i> {{ pedido.cliente_nome or ('Balcão' if pedido.mesa and pedido.mesa.numero == 0 else 'Mesa ' + (pedido.mesa.numero|string if pedido.mesa else '')) }}</span>
                     <span><i class="fas fa-clock"></i> {{ pedido.criado_em.strftime('%H:%M') if pedido.criado_em else '' }}</span>
-                    <span><i class="fas fa-tag"></i> {% if pedido.tipo == 'mesa' and pedido.mesa %}Mesa {{ pedido.mesa.numero }}{% else %}{{ pedido.tipo|capitalize }}{% endif %}</span>
+                    <span><i class="fas fa-tag"></i> {% if pedido.tipo == 'mesa' and pedido.mesa %}{% if pedido.mesa.numero == 0 %}Balcão{% else %}Mesa {{ pedido.mesa.numero }}{% endif %}{% else %}{{ pedido.tipo|capitalize }}{% endif %}</span>
                     <span><i class="fas fa-box"></i> {{ pedido.itens|length }} itens</span>
                     {% set tp = pedido|total_parcial %}
                     {% if tp > 0 %}

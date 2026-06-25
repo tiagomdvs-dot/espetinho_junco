@@ -124,8 +124,8 @@
             </tr>
             {% if pedido.tipo == 'mesa' and pedido.mesa %}
             <tr>
-                <td>Mesa:</td>
-                <td>{{ pedido.mesa.numero }}</td>
+                <td>{% if pedido.mesa.numero == 0 %}Balcão{% else %}Mesa{% endif %}:</td>
+                <td>{% if pedido.mesa.numero == 0 %}<i class="fas fa-store"></i> Balcão{% else %}{{ pedido.mesa.numero }}{% endif %}</td>
             </tr>
             {% endif %}
             {% if pedido.cliente_nome %}
