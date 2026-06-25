@@ -1338,9 +1338,10 @@ img { max-width: 100%; display: block; }
 .order-mini-footer {
   margin-top: 0.75rem; padding-top: 0.5rem;
   border-top: 1px solid var(--border-color);
-  display: flex; gap: 0.5rem;
+  display: flex; flex-wrap: wrap; gap: 0.4rem;
 }
-.order-mini-footer .btn { flex: 1; }
+.order-mini-footer .btn { flex: 1; min-width: 80px; }
+.order-mini-footer .btn-sm { padding: 0.4rem 0.5rem; font-size: 0.75rem; min-height: 34px; }
 
 .add-item-grid {
   display: grid; grid-template-columns: repeat(2, 1fr);

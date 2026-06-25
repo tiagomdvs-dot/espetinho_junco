@@ -116,6 +116,15 @@ def _fmt_brl(valor):
 
 app.jinja_env.filters['brl'] = _fmt_brl
 
+def _total_parcial(pedido):
+    return sum(pp.valor for pp in (pedido.pagamentos_parciais or []))
+
+def _restante(pedido):
+    return (pedido.total or 0) - _total_parcial(pedido)
+
+app.jinja_env.filters['total_parcial'] = _total_parcial
+app.jinja_env.filters['restante'] = _restante
+
 with app.app_context():
     try:
         db.create_all()

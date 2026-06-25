@@ -322,13 +322,13 @@
                         <span class="item-qtd">{{ item.quantidade }}x</span>
                         <span class="item-name">{{ item.produto.nome if item.produto else 'Item #' + item.produto_id|string }}</span>
                     </span>
-                    <span class="item-preco">R$ {{ item.preco_unitario * item.quantidade|brl }}</span>
+                    <span class="item-preco">R$ {{ (item.preco_unitario * item.quantidade)|brl }}</span>
                 </div>
                 {% endfor %}
 
                 <div class="order-total">
                     <span>Total</span>
-                    <span>R$ {{ pedido.total or 0|brl }}</span>
+                    <span>R$ {{ (pedido.total or 0)|brl }}</span>
                 </div>
 
                 {% if pedido.observacao %}

@@ -6,6 +6,32 @@ import csv
 import io
 
 
+def total_parcial(pedido):
+    return sum(pp.valor for pp in pedido.pagamentos_parciais)
+
+
+def marcar_parcial(pedido, forma_pagamento, valor):
+    if pedido.status == 'pago':
+        return False, 'Pedido já está pago.'
+    if pedido.status == 'cancelado':
+        return False, 'Pedido cancelado.'
+    if valor <= 0:
+        return False, 'Valor inválido.'
+    total_pedido = 0
+    for i in pedido.itens:
+        preco = i.preco_unitario
+        if preco is None:
+            preco = i.produto.preco if i.produto else 0
+        total_pedido += preco * i.quantidade
+    pedido.total = total_pedido
+    ja_pago = total_parcial(pedido)
+    if ja_pago + valor > total_pedido + 0.01:
+        return False, f'Valor excede o total do pedido. Já pago: R$ {ja_pago:.2f}, Restante: R$ {total_pedido - ja_pago:.2f}'
+    pp = PagamentoParcial(pedido_id=pedido.id, valor=valor, forma_pagamento=forma_pagamento)
+    db.session.add(pp)
+    return True, None
+
+
 def marcar_pago(pedido, forma_pagamento='dinheiro'):
     if pedido.status == 'pago':
         return False, 'Pedido já está pago.'

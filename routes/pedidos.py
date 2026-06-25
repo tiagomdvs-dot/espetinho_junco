@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
 from flask_login import login_required, current_user
-from models import db, Pedido, ItemPedido, Produto, Mesa, Insumo, MovimentoEstoque, Categoria, CardapioAlmoco, AlmocoDia, DIAS_SEMANA
-from utils import now_local, marcar_pago, processar_pagamentos, imprimir_pedido
+from models import db, Pedido, ItemPedido, Produto, Mesa, Insumo, MovimentoEstoque, Categoria, CardapioAlmoco, AlmocoDia, DIAS_SEMANA, PagamentoParcial
+from utils import now_local, marcar_pago, marcar_parcial, processar_pagamentos, total_parcial, imprimir_pedido
 from sqlalchemy import case
 
 bp = Blueprint('pedidos', __name__, url_prefix='/pedidos')
@@ -248,21 +248,44 @@ def finalizar_mesa():
         flash('Pedido não encontrado', 'error')
         return _redirect_back()
 
+    if pedido.status == 'pago':
+        flash('Pedido já está pago.', 'error')
+        return _redirect_back()
+
+    # Recalcula total do pedido
+    total_pedido = 0
+    for i in pedido.itens:
+        preco = i.preco_unitario
+        if preco is None:
+            preco = i.produto.preco if i.produto else 0
+        total_pedido += preco * i.quantidade
+    pedido.total = total_pedido
+
+    ja_pago = total_parcial(pedido)
+    restante = total_pedido - ja_pago
+
     if not pagamentos:
         forma_pagamento = request.form.get('forma_pagamento', 'dinheiro')
-        ok, erro = marcar_pago(pedido, forma_pagamento)
-        formas_str = forma_pagamento
-    elif len(pagamentos) == 1:
-        ok, erro = marcar_pago(pedido, pagamentos[0]['forma'])
-        formas_str = pagamentos[0]['forma']
-    else:
-        ok, erro = processar_pagamentos(pedido, pagamentos)
-        formas_str = ', '.join([f"{p['forma']} R${p['valor']:.2f}" for p in pagamentos])
+        pagamentos = [{'forma': forma_pagamento, 'valor': restante}]
 
-    if not ok:
-        flash(erro, 'error')
+    total_pago_agora = sum(p['valor'] for p in pagamentos)
+    if abs(total_pago_agora - restante) > 0.01:
+        flash(f'Valor dos pagamentos (R$ {total_pago_agora:.2f}) difere do restante (R$ {restante:.2f}).', 'error')
         return _redirect_back()
+
+    pedido.status = 'pago'
+    pedido.pago_em = now_local()
+    if len(pagamentos) == 1:
+        pedido.forma_pagamento = pagamentos[0]['forma']
+    else:
+        pedido.forma_pagamento = 'multi'
+
+    for p in pagamentos:
+        pp = PagamentoParcial(pedido_id=pedido.id, valor=p['valor'], forma_pagamento=p['forma'])
+        db.session.add(pp)
+
     db.session.commit()
+    formas_str = ', '.join([f"{p['forma']} R${p['valor']:.2f}" for p in pagamentos])
     flash(f'Mesa finalizada! {formas_str}', 'success')
     return _redirect_back()
 
@@ -453,6 +476,32 @@ def criar_completo():
         print(f'[IMPRESSÃO] Erro ao imprimir pedido #{pedido.id}: {erro_print}')
 
     flash('Pedido criado com sucesso!', 'success')
+    return _redirect_back()
+
+
+@bp.route('/receber-parcial', methods=['POST'])
+@login_required
+def receber_parcial():
+    if current_user.role not in ('garcom', 'owner'):
+        flash('Permissão negada.', 'error')
+        return _redirect_back()
+    pedido_id = request.form.get('pedido_id')
+    forma = request.form.get('forma_pagamento', 'dinheiro')
+    try:
+        valor = float(request.form.get('valor', '0').replace(',', '.'))
+    except ValueError:
+        flash('Valor inválido.', 'error')
+        return _redirect_back()
+    pedido = Pedido.query.get(int(pedido_id))
+    if not pedido:
+        flash('Pedido não encontrado', 'error')
+        return _redirect_back()
+    ok, erro = marcar_parcial(pedido, forma, valor)
+    if not ok:
+        flash(erro, 'error')
+        return _redirect_back()
+    db.session.commit()
+    flash(f'Recebido R$ {valor:.2f} via {forma}!', 'success')
     return _redirect_back()
 
 

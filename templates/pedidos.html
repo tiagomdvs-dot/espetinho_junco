@@ -52,7 +52,7 @@
             {% endif %}
             <div class="pedido-total">
                 <span>Total:</span>
-                <strong>R$ {{ pedido.total or 0|brl }}</strong>
+                <strong>R$ {{ (pedido.total or 0)|brl }}</strong>
             </div>
         </div>
         <div class="pedido-actions">

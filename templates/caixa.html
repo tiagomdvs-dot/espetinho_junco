@@ -8,7 +8,7 @@
             <i class="fas fa-cash-register"></i>
             <div>
                 <h3>Caixa Aberto</h3>
-                <p>Saldo inicial: R$ {{ caixa.saldo_inicial or 0|brl }}</p>
+                <p>Saldo inicial: R$ {{ (caixa.saldo_inicial or 0)|brl }}</p>
                 <p>Aberto em: {{ caixa.data_abertura.strftime('%d/%m/%Y %H:%M') }}</p>
             </div>
         </div>
@@ -54,7 +54,7 @@
                             {{ pedido.cliente_nome or (pedido.mesa.numero|string if pedido.mesa else ('Delivery' if pedido.tipo == 'delivery' else 'Cliente')) }}
                         </span>
                     </div>
-                    <span class="pendente-total">R$ {{ pedido.total or 0|brl }}</span>
+                    <span class="pendente-total">R$ {{ (pedido.total or 0)|brl }}</span>
                     <i class="fas fa-chevron-right"></i>
                 </div>
                 {% else %}

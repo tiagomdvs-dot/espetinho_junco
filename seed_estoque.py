@@ -79,7 +79,7 @@ def seed():
         db.session.commit()
 
         print("\nInsumos por categoria:")
-        from models import CATEGORIAS_INSUMO
+        from models import CATEGORIAS_INSUMO_FIXAS as CATEGORIAS_INSUMO
         for cat in CATEGORIAS_INSUMO:
             itens = Insumo.query.filter_by(categoria=cat).all()
             if itens:

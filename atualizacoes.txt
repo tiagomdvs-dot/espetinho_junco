@@ -275,7 +275,20 @@
   - Variável de ambiente: `SECRET_KEY` (opcional, já tem fallback)
 
 25/06/2026
-- Trocado remote origin para tiagomdvs-dot/espetinho_junco (HTTPS)
-- Atualizadas credenciais git no AGENTS.md (tiago.m.dvs@gmail.com / tiagomdvs-dot)
+- 5d548f2 - Trocado remote origin para tiagomdvs-dot/espetinho_junco (HTTPS)
+- 5d548f2 - Atualizadas credenciais git no AGENTS.md (tiago.m.dvs@gmail.com / tiagomdvs-dot)
 - Criado .env com credenciais do Supabase (DATABASE_URL apontando para pooler PostgreSQL do Supabase)
+- Conectado Supabase como banco de produção (Preview Branch: prefixo vazio)
+
+25/06/2026
+- Implementado pagamento parcial no garçom (receber sem fechar a mesa)
+  - utils.py: nova função marcar_parcial() e total_parcial()
+  - app.py: filtros Jinja |total_parcial e |restante
+  - routes/pedidos.py: rota /receber-parcial + finalizar_mesa adaptado (considera parciais)
+  - templates/pedidos_garcom.html: botão "Receber" + modal de recebimento parcial
+    - Card do pedido exibe "Pago: R$ X" quando há parciais
+    - Modal "Receber Parcial" com valor e forma de pagamento
+    - Finalizar Mesa agora mostra restante em vez do total
+  - templates/comanda.html: exibe valores parciais e restante
+  - CSS: .order-mini-footer ajustado para flex-wrap com novos botões
 

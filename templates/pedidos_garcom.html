@@ -141,6 +141,10 @@
                     <span><i class="fas fa-clock"></i> {{ pedido.criado_em.strftime('%H:%M') if pedido.criado_em else '' }}</span>
                     <span><i class="fas fa-tag"></i> {% if pedido.tipo == 'mesa' and pedido.mesa %}Mesa {{ pedido.mesa.numero }}{% else %}{{ pedido.tipo|capitalize }}{% endif %}</span>
                     <span><i class="fas fa-box"></i> {{ pedido.itens|length }} itens</span>
+                    {% set tp = pedido|total_parcial %}
+                    {% if tp > 0 %}
+                    <span><i class="fas fa-check-circle" style="color:var(--success)"></i> <strong style="color:var(--success)">Pago:</strong> R$ {{ tp|brl }}</span>
+                    {% endif %}
                     {% if pedido.forma_pagamento %}
                     {% if pedido.forma_pagamento == 'multi' and pedido.pagamentos_parciais %}
                     <span style="flex-wrap:wrap;gap:0.2rem">
@@ -170,7 +174,7 @@
                     <div class="order-mini-item">
                         <span class="item-qtd">{{ item.quantidade }}x</span>
                         <span class="item-nome">{{ item.produto.nome if item.produto else 'Item' }}</span>
-                        <span class="item-valor">R$ {{ item.preco_unitario * item.quantidade|brl }}</span>
+                        <span class="item-valor">R$ {{ (item.preco_unitario * item.quantidade)|brl }}</span>
                         {% if pedido.status in ('em_preparo', 'pronto') %}
                         <button class="btn-icon btn-danger" style="font-size:0.8rem;min-width:32px;min-height:32px;width:32px;height:32px;padding:0" onclick="if(confirm('Remover {{ item.produto.nome if item.produto else 'Item' }} do pedido?'))window.location.href='{{ url_for('pedidos.remover_item', id=item.id) }}'" title="Remover item">
                             <i class="fas fa-trash"></i>
@@ -184,7 +188,7 @@
                 </div>
                 <div class="order-mini-total">
                     <span>Total:</span>
-                    <strong>R$ {{ pedido.total or 0|brl }}</strong>
+                    <strong>R$ {{ (pedido.total or 0)|brl }}</strong>
                 </div>
                 <div class="order-mini-footer">
                     {% if pedido.status in ('em_preparo', 'pronto', 'entregue') %}
@@ -194,10 +198,15 @@
                     <button class="btn btn-sm btn-primary" onclick="openAddItem({{ pedido.id }})">
                         <i class="fas fa-plus"></i> Item
                     </button>
+                    {% set restante = pedido|restante %}
+                    <button class="btn btn-sm btn-warning" onclick="openParcial({{ pedido.id }}, {{ restante }})">
+                        <i class="fas fa-hand-holding-usd"></i> Receber
+                    </button>
                     {% endif %}
                     {% if pedido.status == 'pronto' %}
-                    <button class="btn btn-sm btn-success" onclick="openFinalizar({{ pedido.id }}, {{ pedido.total or 0 }})">
-                        <i class="fas fa-check"></i> Finalizar Mesa
+                    {% set restante = pedido|restante %}
+                    <button class="btn btn-sm btn-success" onclick="openFinalizar({{ pedido.id }}, {{ restante }})">
+                        <i class="fas fa-check"></i> Finalizar
                     </button>
                     {% endif %}
                     {% if pedido.status in ('em_preparo', 'pronto', 'entregue') %}
@@ -246,7 +255,7 @@
         </div>
         <form method="POST" action="{{ url_for('pedidos.finalizar_mesa') }}" id="finalizarForm">
             <input type="hidden" name="pedido_id" id="finalizarPedidoId">
-            <input type="hidden" name="pagamentos" id="finalizarPagamentosInput">
+            <input type="hidden" name="pagamentos" id="finalizarPagamentosInput" value="[]">
             <div class="finalizar-total">
                 <span>Total:</span>
                 <strong id="finalizarTotal">R$ 0,00</strong>
@@ -306,6 +315,49 @@
 
             <button type="submit" class="btn btn-success btn-block" id="btnConfirmarFinalizar">
                 <i class="fas fa-check"></i> Confirmar Pagamento
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="parcialModal">
+    <div class="modal-content" style="max-width:360px">
+        <div class="modal-header">
+            <h3><i class="fas fa-hand-holding-usd"></i> Receber Parcial</h3>
+            <button class="modal-close" onclick="closeModal('parcialModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('pedidos.receber_parcial') }}" id="parcialForm">
+            <input type="hidden" name="pedido_id" id="parcialPedidoId">
+            <div class="parcial-restante" style="text-align:center;padding:1rem 0;font-size:1.1rem">
+                <span style="color:var(--text-light)">Restante:</span>
+                <strong id="parcialRestante" style="font-size:1.3rem;color:var(--success)">R$ 0,00</strong>
+            </div>
+            <div class="form-group">
+                <label for="parcialValor">Valor a receber</label>
+                <input type="text" id="parcialValor" name="valor" placeholder="0,00" style="font-size:1.2rem;text-align:center;font-weight:bold;padding:0.6rem" oninput="parcialValorChanged()">
+            </div>
+            <div class="form-group">
+                <label>Forma de Pagamento</label>
+                <div class="pagamento-options" style="display:flex;gap:0.4rem">
+                    <label class="pagamento-option" style="flex:1;text-align:center">
+                        <input type="radio" name="forma_pagamento" value="dinheiro" checked>
+                        <i class="fas fa-money-bill"></i>
+                        <span>Dinheiro</span>
+                    </label>
+                    <label class="pagamento-option" style="flex:1;text-align:center">
+                        <input type="radio" name="forma_pagamento" value="pix">
+                        <i class="fas fa-qrcode"></i>
+                        <span>PIX</span>
+                    </label>
+                    <label class="pagamento-option" style="flex:1;text-align:center">
+                        <input type="radio" name="forma_pagamento" value="cartao">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Cartão</span>
+                    </label>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-warning btn-block" id="btnConfirmarParcial" disabled>
+                <i class="fas fa-check"></i> Confirmar Recebimento
             </button>
         </form>
     </div>
@@ -517,10 +569,26 @@ function selectProduto(el, id) {
     if (id !== 'almoco') document.getElementById('addItemObs').value = '';
 }
 
-function openFinalizar(pedidoId, total) {
+function openParcial(pedidoId, restante) {
+    document.getElementById('parcialPedidoId').value = pedidoId;
+    document.getElementById('parcialRestante').textContent = 'R$ ' + restante.toFixed(2).replace('.', ',');
+    document.getElementById('parcialRestante').setAttribute('data-restante', restante);
+    document.getElementById('parcialValor').value = '';
+    document.getElementById('btnConfirmarParcial').disabled = true;
+    openModal('parcialModal');
+    setTimeout(function() { document.getElementById('parcialValor').focus(); }, 100);
+}
+
+function parcialValorChanged() {
+    const restante = parseFloat(document.getElementById('parcialRestante').getAttribute('data-restante'));
+    const val = parseFloat(document.getElementById('parcialValor').value.replace(',', '.')) || 0;
+    document.getElementById('btnConfirmarParcial').disabled = !(val > 0 && val <= restante + 0.01);
+}
+
+function openFinalizar(pedidoId, restante) {
     document.getElementById('finalizarPedidoId').value = pedidoId;
-    document.getElementById('finalizarTotal').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
-    document.getElementById('finalizarTotal').setAttribute('data-total', total);
+    document.getElementById('finalizarTotal').textContent = 'R$ ' + restante.toFixed(2).replace('.', ',');
+    document.getElementById('finalizarTotal').setAttribute('data-total', restante);
     document.getElementById('chkDividirFinalizar').checked = false;
     document.getElementById('finalizarDividido').style.display = 'none';
     document.getElementById('finalizarNormal').style.display = 'block';
@@ -561,6 +629,10 @@ document.getElementById('finalizarForm').addEventListener('submit', function() {
         if (pix > 0) pagamentos.push({ forma: 'pix', valor: pix });
         if (cartao > 0) pagamentos.push({ forma: 'cartao', valor: cartao });
         document.getElementById('finalizarPagamentosInput').value = JSON.stringify(pagamentos);
+    } else {
+        const forma = document.querySelector('input[name="forma_pagamento"]:checked')?.value || 'dinheiro';
+        const restante = parseFloat(document.getElementById('finalizarTotal').getAttribute('data-total'));
+        document.getElementById('finalizarPagamentosInput').value = JSON.stringify([{ forma: forma, valor: restante }]);
     }
 });
 

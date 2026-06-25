@@ -138,6 +138,17 @@
                 <td>Status:</td>
                 <td>{{ pedido.status|replace('_', ' ')|capitalize }}</td>
             </tr>
+            {% set tp = pedido|total_parcial %}
+            {% if tp > 0 and pedido.status != 'pago' %}
+            <tr>
+                <td>Pago Parcial:</td>
+                <td>R$ {{ tp|brl }}</td>
+            </tr>
+            <tr>
+                <td>Restante:</td>
+                <td>R$ {{ pedido|restante|brl }}</td>
+            </tr>
+            {% endif %}
             {% if pedido.forma_pagamento %}
             {% if pedido.forma_pagamento == 'multi' and pedido.pagamentos_parciais %}
             <tr>
@@ -166,12 +177,12 @@
     <div class="item">
         <span class="item-qtd">{{ item.quantidade }}x</span>
         <span class="item-nome">{{ item.produto.nome if item.produto else 'Item #' ~ item.produto_id }}</span>
-        <span class="item-preco">R$ {{ item.preco_unitario * item.quantidade|brl }}</span>
+        <span class="item-preco">R$ {{ (item.preco_unitario * item.quantidade)|brl }}</span>
     </div>
     {% endfor %}
 
     <div class="total">
-        Total: R$ {{ pedido.total or 0|brl }}
+        Total: R$ {{ (pedido.total or 0)|brl }}
     </div>
 
     {% if pedido.observacao %}
