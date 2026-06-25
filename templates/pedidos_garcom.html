@@ -111,9 +111,9 @@
             <h3><i class="fas fa-chair"></i> Mesas</h3>
             <div class="mesas-grid">
                 {% for mesa in mesas %}
-                <span class="mesa-badge {% if mesa.numero == 0 %}balcao{% endif %} {% if mesa.id in mesas_ocupadas %}ocupada{% else %}livre{% endif %}">
+                <span class="mesa-badge {% if mesa.numero == 0 %}balcao{% endif %} {% if mesa.id in mesas_ocupadas and mesa.numero != 0 %}ocupada{% else %}livre{% endif %}">
                     {% if mesa.numero == 0 %}<i class="fas fa-store"></i> B{% else %}{{ mesa.numero }}{% endif %}
-                    <small>{% if mesa.id in mesas_ocupadas %}Ocupado{% else %}Livre{% endif %}</small>
+                    <small>{% if mesa.numero == 0 %}Balcão{% elif mesa.id in mesas_ocupadas %}Ocupado{% else %}Livre{% endif %}</small>
                 </span>
                 {% endfor %}
             </div>
