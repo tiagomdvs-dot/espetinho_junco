@@ -28,7 +28,8 @@ if database_url and database_url.startswith('postgresql://'):
         qs.pop('sslmode', None)
         qs.pop('pgbouncer', None)
         clean_query = urlencode(qs, doseq=True)
-        database_url = database_url.replace(parsed.query, clean_query)
+        base = database_url.rstrip('?').split('?')[0]
+        database_url = f'{base}?{clean_query}' if clean_query else base
     except ImportError:
         pass
 if not database_url:
