@@ -538,11 +538,21 @@ renderCarrinho();
 function filtrarPedidos(query) {
     const cards = document.querySelectorAll('.order-mini-card');
     const q = query.toLowerCase().trim();
+    const qNum = parseInt(q, 10);
+    const isNum = !isNaN(qNum) && qNum.toString() === q;
     cards.forEach(function(card) {
         const mesa = card.getAttribute('data-mesa');
         const cliente = card.getAttribute('data-cliente').toLowerCase();
         const pedidoId = card.querySelector('.order-mini-header strong')?.textContent.toLowerCase() || '';
-        const match = !q || mesa.includes(q) || cliente.includes(q) || pedidoId.includes(q);
+        let match = !q;
+        if (!match) {
+            if (isNum && mesa) {
+                match = mesa === qNum.toString();
+            } else {
+                match = cliente.includes(q) || pedidoId.includes(q);
+                if (mesa) match = match || mesa.includes(q);
+            }
+        }
         card.style.display = match ? '' : 'none';
     });
 }
