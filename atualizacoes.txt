@@ -281,7 +281,8 @@
 - Conectado Supabase como banco de produção (Preview Branch: prefixo vazio)
 
 25/06/2026
-- Implementado pagamento parcial no garçom (receber sem fechar a mesa)
+- 7b907e0 - Deploy para Vercel (push para main)
+- 7b907e0 - Implementado pagamento parcial no garçom (receber sem fechar a mesa)
   - utils.py: nova função marcar_parcial() e total_parcial()
   - app.py: filtros Jinja |total_parcial e |restante
   - routes/pedidos.py: rota /receber-parcial + finalizar_mesa adaptado (considera parciais)
