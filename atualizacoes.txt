@@ -274,3 +274,8 @@
   - Variável de ambiente: `DATABASE_URL` (PostgreSQL do Render)
   - Variável de ambiente: `SECRET_KEY` (opcional, já tem fallback)
 
+25/06/2026
+- Trocado remote origin para tiagomdvs-dot/espetinho_junco (HTTPS)
+- Atualizadas credenciais git no AGENTS.md (tiago.m.dvs@gmail.com / tiagomdvs-dot)
+- Criado .env com credenciais do Supabase (DATABASE_URL apontando para pooler PostgreSQL do Supabase)
+
