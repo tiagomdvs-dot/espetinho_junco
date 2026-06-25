@@ -19,8 +19,8 @@
                 <select name="mesa_id" id="mesa_id" required>
                     <option value="">Selecione a mesa</option>
                     {% for mesa in mesas %}
-                    <option value="{{ mesa.id }}" {% if mesa.id in mesas_ocupadas %}disabled{% endif %}>
-                        {% if mesa.numero == 0 %}Balcão{% else %}Mesa {{ mesa.numero }}{% endif %}{% if mesa.id in mesas_ocupadas %} (Ocupada){% endif %}
+                    <option value="{{ mesa.id }}" {% if mesa.id in mesas_ocupadas and mesa.numero != 0 %}disabled{% endif %}>
+                        {% if mesa.numero == 0 %}Balcão{% else %}Mesa {{ mesa.numero }}{% endif %}{% if mesa.id in mesas_ocupadas and mesa.numero != 0 %} (Ocupada){% endif %}
                     </option>
                     {% endfor %}
                 </select>

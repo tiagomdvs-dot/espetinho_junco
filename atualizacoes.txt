@@ -300,9 +300,14 @@
 - 1dc38f6 - Removido sslmode e pgbouncer da query string da URL (parâmetros libpq, pg8000 ignora)
 - 883e4cd - Corrigido trailing ? na URL quando query params são removidos
 - 50cb128 - app.py agora também verifica POSTGRES_URL_NON_POOLING (variável da integração Supabase Vercel)
-- Cardápio admin: categorias agora aparecem como botões de filtro clicáveis ao lado dos filtros de tipo
+- 7bb539b - Cardápio admin: categorias agora aparecem como botões de filtro clicáveis ao lado dos filtros de tipo
   - templates/cardapio.html: botões dinâmicos gerados para cada categoria, data-filter-type="categoria"
   - templates/cardapio.html: cada produto-card ganhou data-categoria-id
   - templates/cardapio.html: JS de filtro estendido para suportar filterType (tipo, categoria, all)
   - CSS: .filter-cat com border-style:dashed para distinguir visualmente filtros de categoria
+- 3a60e1d - CSS: filtros do cardápio em grid responsivo (2 col mobile, 3 tablet pequeno, 6 tablet/desktop)
+- 3efd8d7 - Garçom: busca por número da mesa agora usa match exato (digitar "1" só mostra mesa 1, não mesa 10)
+- 98ab400 - Balcão (mesa 0): nova opção no garçom para pedidos de levar/balcão
+  - templates: Balcão aparece no grid de mesas (ícone loja, badge azul), seletor, cozinha, comanda
+  - Balcão nunca fica "ocupado" — permite múltiplos pedidos simultâneos
 
