@@ -32,7 +32,7 @@ database_url = (
     os.environ.get('DATABASE_URL')
     or os.environ.get('POSTGRES_URL_NON_POOLING')
 )
-if database_url and database_url.startswith('postgresql://'):
+if database_url and database_url.startswith('postgres'):
     try:
         import pg8000
         database_url = _clean_pg_url(database_url)
