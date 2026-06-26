@@ -51,80 +51,112 @@ PRODUTOS = [
 
 # ─── INSUMOS (ESTOQUE) ───
 INSUMOS = [
-    {'nome': 'Carne',           'categoria': 'espetos',        'unidade': 'un'},
-    {'nome': 'Frango',          'categoria': 'espetos',        'unidade': 'un'},
-    {'nome': 'Linguiça',        'categoria': 'espetos',        'unidade': 'un'},
-    {'nome': 'Queijo',          'categoria': 'espetos',        'unidade': 'un'},
-    {'nome': 'Coração de boi',  'categoria': 'espetos',        'unidade': 'un'},
-    {'nome': 'Porco',           'categoria': 'espetos',        'unidade': 'un'},
-    {'nome': 'Bacon',           'categoria': 'espetos',        'unidade': 'un'},
-    {'nome': 'Maminha',         'categoria': 'espetos',        'unidade': 'un'},
-    {'nome': 'Cupim',           'categoria': 'espetos',        'unidade': 'un'},
-    {'nome': 'Pão de Alho',     'categoria': 'espetos',        'unidade': 'un'},
-    {'nome': 'Arroz',           'categoria': 'espetos',        'unidade': 'kg'},
-    {'nome': 'Feijão',          'categoria': 'espetos',        'unidade': 'kg'},
+    # ── Acompanhamentos ──
+    {'nome': 'Baião',           'categoria': 'acompanhamentos', 'unidade': 'porção'},
     {'nome': 'Batata',          'categoria': 'acompanhamentos', 'unidade': 'porção'},
     {'nome': 'Macaxeira',       'categoria': 'acompanhamentos', 'unidade': 'porção'},
-    {'nome': 'Baião',           'categoria': 'acompanhamentos', 'unidade': 'porção'},
     {'nome': 'Maria Isabel',    'categoria': 'acompanhamentos', 'unidade': 'porção'},
-    {'nome': 'Skol 600ml',      'categoria': 'cervejas',       'unidade': 'un'},
-    {'nome': 'Brahma 600ml',    'categoria': 'cervejas',       'unidade': 'un'},
-    {'nome': 'Império 600ml',   'categoria': 'cervejas',       'unidade': 'un'},
-    {'nome': 'Stella 600ml',    'categoria': 'cervejas',       'unidade': 'un'},
-    {'nome': 'Heineken 600ml',  'categoria': 'cervejas',       'unidade': 'un'},
-    {'nome': 'Budweiser LN',    'categoria': 'cervejas',       'unidade': 'un'},
-    {'nome': 'Heineken LN',     'categoria': 'cervejas',       'unidade': 'un'},
-    {'nome': 'Império Verde LN','categoria': 'cervejas',       'unidade': 'un'},
-    {'nome': 'Império Ultra LN','categoria': 'cervejas',       'unidade': 'un'},
+    {'nome': 'Pão de Alho',     'categoria': 'acompanhamentos', 'unidade': 'porção'},
+    {'nome': 'Meio baião',      'categoria': 'acompanhamentos', 'unidade': 'porção'},
+    {'nome': 'Pedaço de carne', 'categoria': 'acompanhamentos', 'unidade': 'un'},
+    # ── Água Mineral ──
+    {'nome': 'Agua mineral com gás', 'categoria': 'agua_mineral', 'unidade': 'un'},
+    {'nome': 'Agua sem gás',         'categoria': 'agua_mineral', 'unidade': 'un'},
+    # ── Cervejas ──
     {'nome': 'Amstel Ultra LN', 'categoria': 'cervejas',       'unidade': 'un'},
-    {'nome': 'Coca-Cola 1L',    'categoria': 'refrigerantes',  'unidade': 'un'},
-    {'nome': 'Coca-Cola Zero 1L',  'categoria': 'refrigerantes', 'unidade': 'un'},
-    {'nome': 'Cajuína 1L',      'categoria': 'refrigerantes',  'unidade': 'un'},
-    {'nome': 'Cajuína Zero 1L', 'categoria': 'refrigerantes',  'unidade': 'un'},
-    {'nome': 'Fanta 1L',        'categoria': 'refrigerantes',  'unidade': 'un'},
-    {'nome': 'Coca-Cola 2L',    'categoria': 'refrigerantes',  'unidade': 'un'},
-    {'nome': 'Coca-Cola Zero 2L',  'categoria': 'refrigerantes', 'unidade': 'un'},
-    {'nome': 'Cajuína 2L',      'categoria': 'refrigerantes',  'unidade': 'un'},
-    {'nome': 'Coca-Cola 1,5L',  'categoria': 'refrigerantes',  'unidade': 'un'},
+    {'nome': 'Brahma 600ml',    'categoria': 'cervejas',       'unidade': 'un'},
+    {'nome': 'Budweiser LN',    'categoria': 'cervejas',       'unidade': 'un'},
+    {'nome': 'Heineken 600ml',  'categoria': 'cervejas',       'unidade': 'un'},
+    {'nome': 'Heineken LN',     'categoria': 'cervejas',       'unidade': 'un'},
+    {'nome': 'Império 600ml',   'categoria': 'cervejas',       'unidade': 'un'},
+    {'nome': 'Império Ultra LN','categoria': 'cervejas',       'unidade': 'un'},
+    {'nome': 'Império Verde LN','categoria': 'cervejas',       'unidade': 'un'},
+    {'nome': 'Skol 600ml',      'categoria': 'cervejas',       'unidade': 'un'},
+    {'nome': 'Stella 600ml',    'categoria': 'cervejas',       'unidade': 'un'},
+    {'nome': 'Ice',             'categoria': 'cervejas',       'unidade': 'un'},
+    # ── Destilados ──
+    {'nome': 'Dreher',          'categoria': 'destilados',     'unidade': 'un'},
+    {'nome': 'Pitú',            'categoria': 'destilados',     'unidade': 'un'},
+    {'nome': 'Montila',         'categoria': 'destilados',     'unidade': 'un'},
+    {'nome': 'Ypioca',          'categoria': 'destilados',     'unidade': 'un'},
+    # ── Espetos ──
+    {'nome': 'Carne',           'categoria': 'espetos',        'unidade': 'un'},
+    {'nome': 'Carne com bacon', 'categoria': 'espetos',        'unidade': 'un'},
+    {'nome': 'Coração de boi',  'categoria': 'espetos',        'unidade': 'un'},
+    {'nome': 'Cupim',           'categoria': 'espetos',        'unidade': 'un'},
+    {'nome': 'Frango',          'categoria': 'espetos',        'unidade': 'un'},
+    {'nome': 'Frango com bacon','categoria': 'espetos',        'unidade': 'un'},
+    {'nome': 'Linguiça Caseira','categoria': 'espetos',        'unidade': 'un'},
+    {'nome': 'Linguiça Toscana','categoria': 'espetos',        'unidade': 'un'},
+    {'nome': 'Maminha',         'categoria': 'espetos',        'unidade': 'un'},
+    {'nome': 'Porco',           'categoria': 'espetos',        'unidade': 'un'},
+    {'nome': 'Queijo',          'categoria': 'espetos',        'unidade': 'un'},
+    {'nome': 'Queijo com bacon','categoria': 'espetos',        'unidade': 'un'},
+    {'nome': 'Lingua',          'categoria': 'espetos',        'unidade': 'un'},
+    {'nome': 'Linguiça fina',   'categoria': 'espetos',        'unidade': 'un'},
+    # ── Refrigerantes ──
+    {'nome': 'Cajuína 1L',          'categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Cajuína 2L',          'categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Cajuína Zero 1L',     'categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Coca-Cola 1,5L',      'categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Coca-Cola 1L',        'categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Coca-Cola 2L',        'categoria': 'refrigerantes', 'unidade': 'un'},
     {'nome': 'Coca-Cola Zero 1,5L', 'categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Coca-Cola Zero 1L',   'categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Coca-Cola Zero 2L',   'categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Fanta 1L',            'categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Cajuína em lata zero','categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Cajuína',             'categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Cajuína em lata',     'categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Cajuína em lata fanta','categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Coca em lata',        'categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Coca em lata zero',   'categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Fanta uva em lata',   'categoria': 'refrigerantes', 'unidade': 'un'},
+    {'nome': 'Guaraná em lata',     'categoria': 'refrigerantes', 'unidade': 'un'},
+    # ── Sucos ──
+    {'nome': 'Acerola',             'categoria': 'sucos', 'unidade': 'un'},
+    {'nome': 'Maracujá',            'categoria': 'sucos', 'unidade': 'un'},
+    {'nome': 'Cajá',                'categoria': 'sucos', 'unidade': 'un'},
+    {'nome': 'Caju',                'categoria': 'sucos', 'unidade': 'un'},
+    {'nome': 'Goiaba',              'categoria': 'sucos', 'unidade': 'un'},
 ]
 
 # ─── VÍNCULOS PRODUTO → INSUMO ───
 VINCULOS = [
-    ('Carne',               'Carne',          1),
-    ('Frango',              'Frango',         1),
-    ('Linguiça',            'Linguiça',       1),
-    ('Queijo',              'Queijo',         1),
-    ('Coração de boi',      'Coração de boi', 1),
-    ('Porco',               'Porco',          1),
-    ('Frango com bacon',    'Frango',         1),
-    ('Queijo com bacon',    'Queijo',         1),
-    ('Carne com bacon',     'Carne',          1),
-    ('Maminha',             'Maminha',        1),
-    ('Cupim',               'Cupim',          1),
-    ('Pão de Alho',         'Pão de Alho',    1),
-    ('Batata e Macaxeira',  'Batata',         1),
-    ('Baião',               'Baião',          1),
-    ('Maria Isabel',        'Maria Isabel',   1),
-    ('Skol 600ml',          'Skol 600ml',     1),
-    ('Brahma 600ml',        'Brahma 600ml',   1),
-    ('Império 600ml',       'Império 600ml',  1),
-    ('Stella 600ml',        'Stella 600ml',   1),
-    ('Heineken 600ml',      'Heineken 600ml', 1),
-    ('Budweiser Long Neck',     'Budweiser LN',     1),
-    ('Heineken Long Neck',      'Heineken LN',      1),
-    ('Império Verde Long Neck', 'Império Verde LN', 1),
-    ('Império Ultra Long Neck', 'Império Ultra LN', 1),
-    ('Amstel Ultra Long Neck',  'Amstel Ultra LN',  1),
-    ('Coca-Cola 1L',        'Coca-Cola 1L',      1),
-    ('Coca-Cola Zero 1L',   'Coca-Cola Zero 1L', 1),
-    ('Cajuína 1L',          'Cajuína 1L',        1),
-    ('Cajuína Zero 1L',     'Cajuína Zero 1L',   1),
-    ('Fanta 1L',            'Fanta 1L',          1),
-    ('Coca-Cola 2L',        'Coca-Cola 2L',      1),
-    ('Coca-Cola Zero 2L',   'Coca-Cola Zero 2L', 1),
-    ('Cajuína 2L',          'Cajuína 2L',        1),
-    ('Coca-Cola 1,5L',      'Coca-Cola 1,5L',    1),
+    ('Carne',               'Carne',           1),
+    ('Frango',              'Frango',          1),
+    ('Linguiça',            'Linguiça Caseira', 1),
+    ('Queijo',              'Queijo',          1),
+    ('Coração de boi',      'Coração de boi',  1),
+    ('Porco',               'Porco',           1),
+    ('Frango com bacon',    'Frango',          1),
+    ('Queijo com bacon',    'Queijo',          1),
+    ('Carne com bacon',     'Carne',           1),
+    ('Maminha',             'Maminha',         1),
+    ('Cupim',               'Cupim',           1),
+    ('Pão de Alho',         'Pão de Alho',     1),
+    ('Batata e Macaxeira',  'Batata',          1),
+    ('Baião',               'Baião',           1),
+    ('Maria Isabel',        'Maria Isabel',    1),
+    ('Skol 600ml',          'Skol 600ml',      1),
+    ('Brahma 600ml',        'Brahma 600ml',    1),
+    ('Império 600ml',       'Império 600ml',   1),
+    ('Stella 600ml',        'Stella 600ml',    1),
+    ('Heineken 600ml',      'Heineken 600ml',  1),
+    ('Budweiser Long Neck',     'Budweiser LN',      1),
+    ('Heineken Long Neck',      'Heineken LN',       1),
+    ('Império Verde Long Neck', 'Império Verde LN',  1),
+    ('Império Ultra Long Neck', 'Império Ultra LN',  1),
+    ('Amstel Ultra Long Neck',  'Amstel Ultra LN',   1),
+    ('Coca-Cola 1L',        'Coca-Cola 1L',       1),
+    ('Coca-Cola Zero 1L',   'Coca-Cola Zero 1L',  1),
+    ('Cajuína 1L',          'Cajuína 1L',         1),
+    ('Cajuína Zero 1L',     'Cajuína Zero 1L',    1),
+    ('Fanta 1L',            'Fanta 1L',           1),
+    ('Coca-Cola 2L',        'Coca-Cola 2L',       1),
+    ('Coca-Cola Zero 2L',   'Coca-Cola Zero 2L',  1),
+    ('Cajuína 2L',          'Cajuína 2L',         1),
+    ('Coca-Cola 1,5L',      'Coca-Cola 1,5L',     1),
     ('Coca-Cola Zero 1,5L', 'Coca-Cola Zero 1,5L', 1),
 ]
 
@@ -177,20 +209,24 @@ def seed():
         print(f'  + {Produto.query.count()} produtos')
 
         # ── Insumos ──
+        # Limpa vínculos e insumos antigos para recriar do zero
+        for p in Produto.query.all():
+            p.insumo_id = None
+            p.qtd_insumo = None
+        db.session.flush()
+        for item in Insumo.query.all():
+            db.session.delete(item)
+        db.session.flush()
+        # Cria os novos insumos
         for item in INSUMOS:
-            existing = Insumo.query.filter_by(nome=item['nome']).first()
-            if existing:
-                existing.categoria = item['categoria']
-                existing.unidade = item['unidade']
-            else:
-                insumo = Insumo(
-                    nome=item['nome'], categoria=item['categoria'],
-                    unidade=item['unidade'], quantidade=0,
-                    quantidade_minima=0, preco_unitario=0,
-                )
-                db.session.add(insumo)
+            insumo = Insumo(
+                nome=item['nome'], categoria=item['categoria'],
+                unidade=item['unidade'], quantidade=0,
+                quantidade_minima=0, preco_unitario=0,
+            )
+            db.session.add(insumo)
         db.session.commit()
-        print(f'  + {Insumo.query.count()} insumos')
+        print(f'  + {Insumo.query.count()} insumos (recriados)')
 
         # ── Vínculos ──
         for prod_nome, ins_nome, qtd in VINCULOS:

@@ -110,7 +110,7 @@ class CategoriaInsumo(db.Model):
     def __repr__(self):
         return self.nome
 
-CATEGORIAS_INSUMO_FIXAS = ['espetos', 'cervejas', 'sucos', 'refrigerantes', 'agua_mineral', 'acompanhamentos']
+CATEGORIAS_INSUMO_FIXAS = ['espetos', 'cervejas', 'destilados', 'sucos', 'refrigerantes', 'agua_mineral', 'acompanhamentos']
 
 class Insumo(db.Model):
     __tablename__ = 'insumos'
