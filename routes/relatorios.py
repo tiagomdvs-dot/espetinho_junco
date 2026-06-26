@@ -30,7 +30,7 @@ def filtro_turno():
     turno = request.args.get('turno', '')
     if not turno or turno == 'todos':
         return None
-    hora = func.cast(func.strftime('%H', Pedido.pago_em), db.Integer)
+    hora = func.extract('HOUR', Pedido.pago_em)
     if turno == 'almoco':
         return and_(hora >= 10, hora < 16)
     if turno == 'espetinho':
@@ -67,7 +67,7 @@ def api_vendas():
         'id': p.id,
         'data': p.pago_em.strftime('%d/%m/%Y %H:%M') if p.pago_em else '',
         'cliente': p.cliente_nome or f"Mesa {p.mesa.numero if p.mesa else 'N/A'}",
-        'total': p.total,
+        'total': p.total or 0,
         'forma': p.forma_pagamento or 'N/A',
         'tipo': p.tipo or 'mesa'
     } for p in pedidos])
