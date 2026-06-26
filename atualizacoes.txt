@@ -294,6 +294,15 @@
   - CSS: .order-mini-footer ajustado para flex-wrap com novos botões
 
 25/06/2026
+- 6a98d9e - Novo estoque com 61 insumos em 7 categorias (acompanhamentos, agua_mineral, cervejas, destilados, espetos, refrigerantes, sucos)
+- 6a98d9e - Adicionados insumos: Meio baião, Pedaço de carne, Ice, Dreher, Pitú, Montila, Ypioca, Linguiça Caseira, Linguiça Toscana, Lingua, Linguiça fina, latas diversas, sucos
+- 6a98d9e - Adicionada categoria 'destilados' em CATEGORIAS_INSUMO_FIXAS (models.py)
+- 6a98d9e - Seed recria insumos do zero (limpa vínculos, deleta antigos, insere novos)
+- 6a98d9e - Pão de Alho movido de espetos para acompanhamentos
+- 6a98d9e - Removidos insumos antigos: Bacon, Arroz, Feijão
+- 6a98d9e - Aplicado via git pull + seed no VPS (187.127.35.54)
+
+26/06/2026
 - 38eed94 - Trocado driver PostgreSQL de psycopg2-binary para pg8000 (puro Python, compatível Vercel Lambda)
 - 38eed94 - app.py detecta pg8000 e adiciona +pg8000 ao dialeto da URL automaticamente
 - 1dc38f6 - Removido connect_args (connect_timeout) dos engine options (incompatível pg8000)
